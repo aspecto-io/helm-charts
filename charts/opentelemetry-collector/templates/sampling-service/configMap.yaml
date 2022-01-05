@@ -1,0 +1,83 @@
+{{- $root := . -}}
+{{- $globalMetadata := .Values.global.metadata -}}
+{{- $globalSharedLabels := $globalMetadata.shared.labels -}}
+{{- $globalObjectLabels := $globalMetadata.configMap.labels }}
+{{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
+{{- $globalObjectAnnotations := $globalMetadata.configMap.annotations }}
+{{- $localMetadata := .Values.sampling_collector.metadata -}}
+{{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
+{{- $localObjectAnnotations := $localMetadata.configMap.annotations -}}
+{{- $localSharedLabels := $localMetadata.shared.labels -}}
+{{- $localObjectLabels := $localMetadata.configMap.labels -}}
+{{- $localListenerIp := .Values.sampling_collector.specs.network.localListenerIp -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
+  namespace: {{ .Values.global.namespace }}
+  labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
+{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
+{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+data:
+  {{ .Values.sampling_collector.specs.volumes.serviceConfig.fileName }}: |
+    config_sources:
+      aspecto:
+        token: {{ required "A valid api token is required." .Values.global.aspecto.apiToken }}
+        interval: {{ .Values.global.aspecto.interval | default 10 }}
+
+    receivers:
+      otlp:
+        protocols:
+    {{- range .Values.sampling_collector.specs.network.ports }}
+    {{- if eq .name "grpc"}}
+          grpc:
+            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+            max_recv_msg_size_mib: 10
+    {{- end}}
+    {{- if eq .name "http"}}
+          http:
+            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+    {{- end}}
+    {{- end}}
+
+
+    processors:
+      tail_sampling: $$aspecto:tail_sampling
+      resource:
+        attributes:
+          - key: aspecto.customer.prem
+            value: true
+            action: insert
+
+    exporters:
+      otlphttp:
+        endpoint: {{ .Values.sampling_collector.specs.configuration.endpoint }}
+      {{- if .Values.sampling_collector.specs.configuration.log.enable }} 
+      logging:
+        logLevel: {{ .Values.sampling_collector.specs.configuration.log.level }}
+      {{- end }}
+
+    {{- range .Values.sampling_collector.specs.network.ports }}
+    {{- if eq .name "health-check"}}
+    extensions:
+      health_check:
+        endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+    {{- end}}
+    {{- end}}
+
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [tail_sampling, resource]
+          {{- if .Values.sampling_collector.specs.configuration.log.enable }}
+          exporters: [otlphttp, logging]
+          {{ else }}
+          exporters: [otlphttp]
+          {{- end }}
