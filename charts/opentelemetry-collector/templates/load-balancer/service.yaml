@@ -14,8 +14,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $root.Values.global.name }}-{{ .name }}-service
-  namespace: {{ $root.Values.global.namespace }}
+  name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-{{ .name }}-service
+  namespace: {{ $localMetadata.namespace | default $root.Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
 {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
 {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}

@@ -1,5 +1,5 @@
 global:
-  name: ''
+  name: aspecto
   namespace: dev
   env: {}
   aspecto:
@@ -9,7 +9,7 @@ global:
   rolloutStrategy:
     rollingUpdate:
       maxUnavailable: 0
-      maxSurge: 2
+      maxSurge: 3
     type: RollingUpdate
   metadata:
     shared:
@@ -45,20 +45,24 @@ global:
     gateway:
       annotations: {}
       labels: {}
+    secret:
+      annotations: {}
+      labels: {}
   image:
     repository: 'public.ecr.aws/x3s3n8k7'
     pullPolicy: Always
-    version: 'v0.0.1-rc1'
+    version: 'v0.0.1-rc2'
 
 load_balancer:
   image:
-      repository: ''
-      policy: IfNotPresent
-      name: 'otelcol-loadbalancing'
-      version: ''
+    repository: ''
+    policy: IfNotPresent
+    name: 'otelcol-loadbalancing'
+    version: ''
 
   metadata:
     name: load-balancer
+    namespace: ''
     shared:
       annotations: {}
       labels: {}
@@ -141,7 +145,7 @@ load_balancer:
 
     volumes:
       serviceConfig:
-        name: otel-lb-config
+        name: service-configuration
         mountPath: /config
         fileName: loadbalancing-config.yml
       extraVolumes: []
@@ -158,27 +162,28 @@ load_balancer:
       localListenerIp: 0.0.0.0
       type: None
       ports:
-        - name: grpc # Default endpoint for OpenTelemetry gRPC receiver.
+        - name: grpc          # Default endpoint for OpenTelemetry gRPC receiver.
           internalPort: 4317
           externalPort: 4317
           protocol: TCP
-        - name: http # Default endpoint for OpenTelemetry HTTP receiver.
+        - name: http          # Default endpoint for OpenTelemetry HTTP receiver.
           internalPort: 4318
           externalPort: 4318
           protocol: TCP
         - metrics:
-          name: metrics # Default endpoint for querying metrics.
+          name: metrics       # Default endpoint for querying metrics.
           internalPort: 8888
           externalPort: 8888
           protocol: TCP
-        - name: health-check # Default endpoint for querying open-telemetry health.
+        - name: health-check  # Default endpoint for querying open-telemetry health.
           internalPort: 8090
           externalPort: 8090
           protocol: TCP
       istio:
         enabled: false
         rules:
-        - ingress:
+        - name: 'port-9000-uri-root'
+          ingress:
             - uriPrefix: "/"
               host: "{{ .Values.global.loadBalancerEndpoint }}"
               destinationPort: 8090
@@ -186,7 +191,7 @@ load_balancer:
             - '*'
 
     services:
-      - name: opentelemetry-sampling-load-balancer
+      - name: loadbalancer
         # Currently, we support 3 service types (ClusterIP, LoadBalancer)
         # Internal - An internal service is a service that would only be accessed from inside the Kubernetes cluster.
         # It will receive an internal IP address that other Kubernetes services could access to consume the service from.
@@ -203,11 +208,11 @@ load_balancer:
           component: otel-collector-load-balancer-pod
 
         ports:
-          - name: grpc # Name of the port (Should match one of the ports in the containers)
-            type: grpc # The Type of the port the service is exposing. The valid options are <http/http2/grpc/mongo/redis/tcp/tls/udp>
+          - name: grpc          # Name of the port (Should match one of the ports in the containers)
+            type: grpc          # The Type of the port the service is exposing. The valid options are <http/http2/grpc/mongo/redis/tcp/tls/udp>
             protocol: TCP
-            externalPort: 4317 # Port the service exposes
-            internalPort: 4317 # Port the service accesses when redirecting to the pod
+            externalPort: 4317  # Port the service exposes
+            internalPort: 4317  # Port the service accesses when redirecting to the pod
             loadBalancer:
               simple: LEAST_CONN
           - name: http
@@ -241,6 +246,7 @@ sampling_collector:
 
   metadata:
     name: sampling-collector
+    namespace: ''
     shared:
       annotations: {}
       labels: {}
@@ -252,7 +258,7 @@ sampling_collector:
       annotations: {}
       labels: {}
     service:
-      annotations : {}
+      annotations: {}
       labels: {}
     configMap:
       annotations: {}
@@ -315,7 +321,7 @@ sampling_collector:
 
     volumes:
       serviceConfig:
-        name: otel-sampling-config
+        name: service-configuration
         mountPath: /config
         fileName: sampling-config.yml
       extraVolumes: []
@@ -333,33 +339,36 @@ sampling_collector:
       type: LoadBalancer
       serviceName: opentelemetry-sampling
       ports:
-        - name: grpc # Default endpoint for OpenTelemetry gRPC receiver.
+        - name: grpc          # Default endpoint for OpenTelemetry gRPC receiver.
           internalPort: 4317
           externalPort: 4317
           protocol: TCP
-        - name: http # Default endpoint for OpenTelemetry HTTP receiver.
+        - name: http          # Default endpoint for OpenTelemetry HTTP receiver.
           internalPort: 4318
           externalPort: 4318
           protocol: TCP
         - metrics:
-          name: metrics # Default endpoint for querying metrics.
+          name: metrics       # Default endpoint for querying metrics.
           internalPort: 8888
           externalPort: 8888
           protocol: TCP
-        - name: health-check # Default endpoint for querying open-telemetry health.
+        - name: health-check  # Default endpoint for querying open-telemetry health.
           internalPort: 8090
           externalPort: 8090
           protocol: TCP
       istio:
         enabled: false
-        ingress:
-          - uriPrefix: "/"
-            destinationPort: 4317
-        hostHeader:
-          - '*'
+        rules:
+          - name: 'port-9000-uri-root'
+            ingress:
+              - uriPrefix: "/"
+                host: "{{ .Values.global.loadBalancerEndpoint }}"
+                destinationPort: 4317
+            hostHeader:
+              - '*'
 
     services:
-      - name: opentelemetry-sampling
+      - name: tail-sampling
         # Currently, we support 2 service types (ClusterIP, LoadBalancer)
         # Internal - An internal service is a service that would only be accessed from inside the Kubernetes cluster.
         # It will receive an internal IP address that other Kubernetes services could access to consume the service from.
@@ -376,10 +385,10 @@ sampling_collector:
           component: otel-collector-sampling-collector
 
         ports:
-          - name: grpc # Name of the port (Should match one of the ports in the containers)
-            type: grpc # The Type of the port the service is exposing. The valid options are <http/http2/grpc/mongo/redis/tcp/tls/udp>
-            externalPort: 8081 # Port the service exposes
-            internalPort: 4317 # Port the service accesses when redirecting to the pod
+          - name: grpc            # Name of the port (Should match one of the ports in the containers)
+            type: grpc            # The Type of the port the service is exposing. The valid options are <http/http2/grpc/mongo/redis/tcp/tls/udp>
+            externalPort: 8081    # Port the service exposes
+            internalPort: 4317    # Port the service accesses when redirecting to the pod
             protocol: TCP
             selector:
               component: sampling-collector
@@ -393,7 +402,7 @@ sampling_collector:
             selector:
               component: sampling-collector
             loadBalancer:
-              simple: LEAST_CONN # We support only simple load balancing algorithms. the valid options are <ROUND_ROBIN/LEAST_CONN/RANDOM>
+              simple: LEAST_CONN  # We support only simple load balancing algorithms. the valid options are <ROUND_ROBIN/LEAST_CONN/RANDOM>
           - name: health-check
             type: http
             externalPort: 8083

@@ -17,8 +17,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.global.name }}-load-balancer-deployment
-  namespace: {{ .Values.global.namespace }}
+  name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-deployment
+  namespace: {{ .Values.load_balancer.metadata.namespace |  default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
 {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
 {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
@@ -49,16 +49,16 @@ spec:
     {{- if $localSubAnnotations }}{{ toYaml $localSubAnnotations | nindent 8 }}{{- end }}
     spec:
       volumes:
-        - name: {{ .Values.load_balancer.specs.volumes.serviceConfig.name }}
-          configMap: 
-            name: {{ .Values.load_balancer.specs.volumes.serviceConfig.name }}
+        - name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.load_balancer.specs.volumes.serviceConfig.name }}
+          configMap:
+            name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.load_balancer.specs.volumes.serviceConfig.name }}
       containers:
         - name: "{{ .Values.global.name }}-{{ .Values.load_balancer.metadata.name }}"
           image: "{{ .Values.load_balancer.image.repository | default .Values.global.image.repository }}/{{ .Values.load_balancer.image.name | default .Values.global.image.name }}:{{ .Values.load_balancer.image.version | default .Values.global.image.version }}"
           imagePullPolicy: {{ .Values.load_balancer.image.policy | default .Values.global.image.pullPolicy }}
           command: ["/otelcol-loadbalancing","--config","/config/loadbalancing-config.yml"]
           volumeMounts:
-            - name: {{ .Values.load_balancer.specs.volumes.serviceConfig.name }}
+            - name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.load_balancer.specs.volumes.serviceConfig.name }}
               mountPath: {{ .Values.load_balancer.specs.volumes.serviceConfig.mountPath | quote }}
           {{- range .Values.load_balancer.specs.volumes.extraVolumes }}
             - name: {{ .name }}

@@ -36,7 +36,7 @@ ___
 # How to install
 1. add the aspecto.io help repo by running:
 ```bash
-console helm repo add aspecto https://aspecto.github.io/opentelemetry-helm-charts
+helm repo add aspecto https://aspecto.github.io/helm-charts
 ```
 
 2. go to https://app.aspecto.io/app/integration/api-key and copy your api key 

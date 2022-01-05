@@ -23,7 +23,7 @@ ___
 ## How to install the helm repo
 1. add the aspecto.io help repo by running:
 ```bash
-console helm repo add aspecto https://aspecto.github.io/opentelemetry-helm-charts
+helm repo add aspecto https://aspecto.github.io/helm-charts
 ```
 
 ## Charts
