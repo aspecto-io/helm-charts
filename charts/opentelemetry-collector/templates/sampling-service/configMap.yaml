@@ -13,8 +13,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
-  namespace: {{ .Values.global.namespace }}
+  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
+  namespace: {{ .Values.sampling_collector.metadata.namespace | default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
 {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
 {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}

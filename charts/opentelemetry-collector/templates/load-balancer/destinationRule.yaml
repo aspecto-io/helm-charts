@@ -16,7 +16,7 @@
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
-  name: {{ $root.Values.global.name }}-{{ .name }}-balancer
+  name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-{{ .name }}-balancer
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
 {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
 {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}

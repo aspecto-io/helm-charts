@@ -17,8 +17,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.global.name }}-sampling-deployment
-  namespace: {{ .Values.global.namespace }}
+  name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-deployment
+  namespace: {{ .Values.sampling_collector.metadata.namespace |  default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
 {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
 {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
@@ -49,16 +49,16 @@ spec:
     {{- if $localSubAnnotations }}{{ toYaml $localSubAnnotations | nindent 8 }}{{- end }}
     spec:
       volumes:
-        - name: {{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
+        - name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
           configMap: 
-            name: {{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
+            name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
       containers:
         - name: "{{ .Values.global.name }}-{{ .Values.sampling_collector.metadata.name }}"
           image: "{{ .Values.sampling_collector.image.repository | default .Values.global.image.repository }}/{{ .Values.sampling_collector.image.name | default .Values.global.image.name }}:{{ .Values.sampling_collector.image.version | default .Values.global.image.version }}"
           imagePullPolicy: {{ .Values.sampling_collector.image.policy | default .Values.global.image.pullPolicy }}
           command: ["/otelcol-sampling","--config","/config/sampling-config.yml"]
           volumeMounts:
-            - name: {{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
+            - name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
               mountPath: {{ .Values.sampling_collector.specs.volumes.serviceConfig.mountPath | quote}}
           {{- range .Values.sampling_collector.specs.volumes.extraVolumes }}
             - name: {{ .name }}
