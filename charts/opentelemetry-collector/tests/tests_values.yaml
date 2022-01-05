@@ -1,0 +1,7 @@
+global:
+  name: otel-collector
+  namespace: testing
+  aspecto:
+    apiToken: 'test-api-token'
+  image:
+    version: latest

@@ -1,0 +1,39 @@
+{{- $root := . -}}
+{{- $globalMetadata := .Values.global.metadata -}}
+{{- $globalSharedLabels := $globalMetadata.shared.labels -}}
+{{- $globalObjectLabels := $globalMetadata.service.labels }}
+{{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
+{{- $globalObjectAnnotations := $globalMetadata.service.annotations }}
+{{- $localMetadata := .Values.sampling_collector.metadata -}}
+{{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
+{{- $localObjectAnnotations := $localMetadata.service.annotations -}}
+{{- $localSharedLabels := $localMetadata.shared.labels -}}
+{{- $localObjectLabels := $localMetadata.service.labels -}}
+{{- $localListenerIp := .Values.sampling_collector.specs.network.localListenerIp -}}
+{{- range .Values.sampling_collector.specs.services }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-{{ .name }}-service
+  namespace: {{ $localMetadata.namespace | default $root.Values.global.namespace }}
+  labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
+{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
+{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+spec:
+  type: {{ .serviceType }}
+  ports:
+    {{- range .ports }}
+    - port: {{ .externalPort }}
+      targetPort: {{ .internalPort }}
+      protocol: {{ .protocol }}
+      name: {{ .name }}
+    {{- end}}
+  selector:
+    {{- toYaml .selector | nindent 4}}
+{{- end }}
