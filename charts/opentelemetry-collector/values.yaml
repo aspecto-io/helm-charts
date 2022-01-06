@@ -51,7 +51,7 @@ global:
   image:
     repository: 'public.ecr.aws/x3s3n8k7'
     pullPolicy: Always
-    version: 'v0.0.1-rc2'
+    version: 'v0.0.1'
 
 load_balancer:
   image:
