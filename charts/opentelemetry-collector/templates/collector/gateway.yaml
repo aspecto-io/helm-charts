@@ -4,12 +4,12 @@
 {{- $globalObjectLabels := $globalMetadata.gateway.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.gateway.annotations }}
-{{- $localMetadata := .Values.sampling_collector.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.gateway.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.gateway.labels -}}
-{{- if .Values.sampling_collector.specs.network.istio.enabled }}
+{{- if .Values.collector.specs.network.istio.enabled }}
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
@@ -31,5 +31,5 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - {{ .Values.sampling_collector.specs.configuration.endpoint }}
+    - {{ .Values.collector.specs.configuration.endpoint }}
 {{- end }}

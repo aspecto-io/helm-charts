@@ -4,14 +4,14 @@
 {{- $globalObjectLabels := $globalMetadata.destinationRule.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.destinationRule.annotations }}
-{{- $localMetadata := .Values.sampling_collector.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.destinationRule.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.destinationRule.labels -}}
-{{- $localListenerIp := .Values.sampling_collector.specs.network.localListenerIp -}}
-{{- if .Values.sampling_collector.specs.network.istio.enabled }}
-{{- range .Values.sampling_collector.specs.services }}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+{{- if .Values.collector.specs.network.istio.enabled }}
+{{- range .Values.collector.specs.services }}
 {{- if eq .serviceType "LoadBalancer" }}
 ---
 apiVersion: networking.istio.io/v1beta1

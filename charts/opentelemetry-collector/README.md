@@ -21,8 +21,8 @@ ___
     - [Upgrading](#upgrading)
   - [Parameters](#parameters)
     - [Global](#global)
-    - [Load-Balancer](#load-balancer)
-    - [Sampling-Collector](#sampling-collector)
+    - [receiver](#receiver)
+    - [collector](#collector)
   - [Resource Planning](#resources-planning)
 
 ___
@@ -93,165 +93,165 @@ _This section of parameters will be shared across all objects unless specified p
 | global.image.`pullPolicy` | Global repository to pull the image from | `Always`, `Never`, `IfNotPresent` | Always | false |
 | global.image.`version` | Global image to pull (we're using the same tag when new version is release and tested) | string | specified to latest stable version| false |
 ___
-## load-balancer
+## receiver
 _This section of parameters describes the load_balancer service_
 | Name | Description | Type/Options | Default | Required |
 | :--- | :--- | :---: | :---: | :---: |
-| load_balancer.`env` | environment variables | object | {} | false | string | empty | `true` |
-| ***`load_balancer.image`*** | _This section of parameters will be configure image policy. leaving values empty will populate values from the global section |
-| load_balancer.image.`repository` | repository to pull the image from | string | public.ecr.aws/x3s3n8k7 | false |
-| load_balancer.image.`pullPolicy` | repository to pull the image from | `Always`, `Never`, `IfNotPresent` | Always | false |
-| load_balancer.image.`version` | image to pull (we're using the same tag when new version is release and tested) | string | specified to latest stable version | false |
-| load_balancer.image.`name` | load balancing docker image name | string | otelcol-loadbalancing | `true` |
-| ***`load_balancer.metadata`*** |
-| load_balancer.metadata.shared.`annotations` | annotations to be shared across all child objects | object | {} | false |
-| load_balancer.metadata.shared.`labels` | labels to be shared across all child objects | object | {} | false |
-| load_balancer.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`annotations` | annotations to be shared across all pods | object | {} | false |
-| load_balancer.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`labels` | labels to be shared across all selected object | object | {} | false |
-| ***`load_balancer.specs`*** : _This section of parameters define resources over the service_ |
-| ***`load_balancer.specs.configuration`*** : _service configuration_ |
-| load_balancer.specs.configuration.exporters.load_balancing.protocol.otlp.`timeout` | timeout of connection in case of no response | string | 1s | `true` |
-| load_balancer.specs.configuration.exporters.load_balancing.protocol.otlp.tls.`insecure` | connection over TLS should verify certificate | boolean | false | `true` |
-| load_balancer.specs.configuration.exporters.load_balancing.protocol.resolver.dns.`hostname` | sampling service endpoint | string | otel-collector-opentelemetry-sampling-service | false |
-| load_balancer.specs.configuration.exporters.load_balancing.protocol.resolver.dns.`port` | sampling service grpc port number | number | 4317 | `true` |
-| load_balancer.specs.configuration.log.`enable` | should turn on logger | boolean | false | false | 
-| load_balancer.specs.configuration.log.`level` | log level | `fatal`, `error`, `info`, `debug` | error | false |
-| load_balancer.specs.configuration.`endpoint` | endpoint for virtual service | string | '' | false |
-| ***`load_balancer.specs.autoscaling`*** : _hpa/autoscaling configuration_ |
-| load_balancer.specs.autoscaling.`enable` | Turn on autoscaling | boolean | true | `true` |
-| load_balancer.specs.autoscaling.`defaultReplicaCount` | replicaCount in case not using HPA | number | 3 | `true` |
-| load_balancer.specs.autoscaling.`minReplicas` | minimum amount of pods | number | 3 | false |
-| load_balancer.specs.autoscaling.`maxReplicas` | maximum amount of pods | number | 20 | false |
-| load_balancer.specs.autoscaling.`targetCPUUtilizationPercentage` | CPU consumption percentage threshold before creating more pods | number | 75 | false | 
-| load_balancer.specs.autoscaling.`targetMemoryUtilizationPercentage` | Memory consumption percentage threshold before creating more pods | number | 75 | false |
-| ***`load_balancer.specs.resources`*** : _resources configuration_ |
-| load_balancer.specs.resources..limits.`cpu` | Amount of cores to allocate to the pod (hard limit) | number | 2 | `true` |
-| load_balancer.specs.resources.limits.`memory` | Amount of memory to allocate to the pod (hard limit) | string | 2Gi | `true` |
-| load_balancer.specs.resources.requests.`cpu` | Amount of cores to allocate to the pod (soft limit) | number | 1 | `true` |
-| load_balancer.specs.resources.requests.`memory` | Amount of cores to allocate to the pod (soft limit) | string | 1Gi | `true` |
-| ***`load_balancer.specs.probe`*** : _pod state monitoring_ |
-| load_balancer.specs.probe.readinessProbe.httpGet.`path` | (Readiness) HTTP uri to run health-check against | string | / | `true` |
-| load_balancer.specs.probe.readinessProbe.httpGet.`port` | (Readiness) HTTP port to run health-check against | number | 8090 | `true` |
-| load_balancer.specs.probe.readinessProbe.`initialDelaySeconds` | (Readiness) How many seconds to wait before first request to probe the state | number | 10 | `true` |
-| load_balancer.specs.probe.readinessProbe.`periodSeconds` | (Readiness) TTL of request to probe the state | number | 3 | `true` |
-| load_balancer.specs.probe.livenessProbe.httpGet.`path` | (Liveness) HTTP uri to run health-check against | string | / | `true` |
-| load_balancer.specs.probe.livenessProbe.httpGet.`port` | (Liveness) HTTP port to run health-check against | number | 8090 | `true` |
-| load_balancer.specs.probe.livenessProbe.`initialDelaySeconds` | (Liveness) How many seconds to wait before first request to probe the state | number | 10 | `true` |
-| load_balancer.specs.probe.livenessProbe.`periodSeconds` | (Liveness) TTL of request to probe the state | number | 3 | `true` |
-| ***`load_balancer.specs.volumes`*** : _pod volumes configuration_ |
-| load_balancer.specs.volumes.serviceConfig.`name` | Volume name | string | otel-lb-config | `true` |
-| load_balancer.specs.volumes.serviceConfig.`mountPath` | mount folder location (name) | string | /config | `true` |
-| load_balancer.specs.volumes.serviceConfig.`fileName` | configuration file name | string | config.yaml | `true` |
-| load_balancer.specs.volumes.`extraVolumes` | array of additional volumes | [] | [] | false |
-| load_balancer.specs.volumes.extraVolumes.`name` | volume name | string | | false |
-| load_balancer.specs.volumes.extraVolumes.`mountPath` | mount folder path | string | | false |
-| load_balancer.specs.volumes.extraVolumes.`subPath` | filename | string | | false |
-| load_balancer.specs.volumes.`extraSecretMounts` | array of additional secrets volumes | [] | [] | false |
-| load_balancer.specs.volumes.extraSecretMounts.[].`name` | volume name | string | | false |
-| load_balancer.specs.volumes.extraSecretMounts.[].`mountPath` | file location in the pod | string | | false |
-| load_balancer.specs.volumes.extraSecretMounts.[].`secretName` | secret name | string | | false |
-| load_balancer.specs.volumes.extraSecretMounts.[].`readOnly` | should use readOnly mount | boolean | true | false |
-| ***`load_balancer.specs.network`*** : _pod network configuration_ | default configuration already applied | 
-| load_balancer.specs.network.`localListenerIp` | IP address the application should accept requests from | string | 0.0.0.0 | `true` |
-| load_balancer.specs.network.`type` | Network type | string | None | `true` |
-| load_balancer.specs.network.`ports` | Port configuration array | [] | [] | `true` |
-| load_balancer.specs.network.ports.[].`name` | Port name | string | grpc | `true` |
-| load_balancer.specs.network.ports.[].`internalPort` | egress port number | number | 4317 | `true` |
-| load_balancer.specs.network.ports.[].`externalPort` | ingress port number | number | 4317 | `true` |
-| load_balancer.specs.network.ports.[].`protocol` | Port protocol | `TCP`, `UDP`, `ICMP` | TCP | `true` |
-| load_balancer.specs.network.istio.`enable` | Should enable istio | boolean | false | `true` |
-| load_balancer.specs.network.istio.`rules` | istio rules | [] | [] | false |
-| ***`load_balancer.specs.services`*** : _service configuration_ |
-| load_balancer.specs.service.[].`name` | Service name | string | opentelemetry-sampling-load-balancer | `true` |
-| load_balancer.specs.service.[].`serviceType` | Service type | `LoadBalancer`, `ClusterIP` | LoadBalancer | `true` |
-| load_balancer.specs.service.[].`selector` | key:value of pod labels | {} | component: otel-collector-load-balancer-pod | `true` |
-| load_balancer.specs.service.[].`ports` | service exposed ports | [] | (default configuration provided) | `true` |
-| load_balancer.specs.service.[].ports.[].`name` | port name | string | grpc | `true` |
-| load_balancer.specs.service.[].ports.[].`type` | port type | string | grpc | `true` |
-| load_balancer.specs.service.[].ports.[].`externalPort` | external port number | number | 4318 | `true` |
-| load_balancer.specs.service.[].ports.[].`internalPort` | internal port number | number | 4318 | `true` |
-| load_balancer.specs.service.[].ports.[].`protocol` | port protocol | `TCP`, `UDP`, `ICMP` | TCP | false |
-| load_balancer.specs.service.[].ports.[].`loadBalancer` | routing mechanism | object | simple: LEAST_CONN | `true` |
+| receiver.`env` | environment variables | object | {} | false | string | empty | `true` |
+| ***`receiver.image`*** | _This section of parameters will be configure image policy. leaving values empty will populate values from the global section |
+| receiver.image.`repository` | repository to pull the image from | string | public.ecr.aws/x3s3n8k7 | false |
+| receiver.image.`pullPolicy` | repository to pull the image from | `Always`, `Never`, `IfNotPresent` | Always | false |
+| receiver.image.`version` | image to pull (we're using the same tag when new version is release and tested) | string | specified to latest stable version | false |
+| receiver.image.`name` | load balancing docker image name | string | otelcol-loadbalancing | `true` |
+| ***`receiver.metadata`*** |
+| receiver.metadata.shared.`annotations` | annotations to be shared across all child objects | object | {} | false |
+| receiver.metadata.shared.`labels` | labels to be shared across all child objects | object | {} | false |
+| receiver.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`annotations` | annotations to be shared across all pods | object | {} | false |
+| receiver.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`labels` | labels to be shared across all selected object | object | {} | false |
+| ***`receiver.specs`*** : _This section of parameters define resources over the service_ |
+| ***`receiver.specs.configuration`*** : _service configuration_ |
+| receiver.specs.configuration.exporters.load_balancing.protocol.otlp.`timeout` | timeout of connection in case of no response | string | 1s | `true` |
+| receiver.specs.configuration.exporters.load_balancing.protocol.otlp.tls.`insecure` | connection over TLS should verify certificate | boolean | false | `true` |
+| receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.`hostname` | sampling service endpoint | string | otel-collector-opentelemetry-sampling-service | false |
+| receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.`port` | sampling service grpc port number | number | 4317 | `true` |
+| receiver.specs.configuration.log.`enable` | should turn on logger | boolean | false | false | 
+| receiver.specs.configuration.log.`level` | log level | `fatal`, `error`, `info`, `debug` | error | false |
+| receiver.specs.configuration.`endpoint` | endpoint for virtual service | string | '' | false |
+| ***`receiver.specs.autoscaling`*** : _hpa/autoscaling configuration_ |
+| receiver.specs.autoscaling.`enable` | Turn on autoscaling | boolean | true | `true` |
+| receiver.specs.autoscaling.`defaultReplicaCount` | replicaCount in case not using HPA | number | 3 | `true` |
+| receiver.specs.autoscaling.`minReplicas` | minimum amount of pods | number | 3 | false |
+| receiver.specs.autoscaling.`maxReplicas` | maximum amount of pods | number | 20 | false |
+| receiver.specs.autoscaling.`targetCPUUtilizationPercentage` | CPU consumption percentage threshold before creating more pods | number | 75 | false | 
+| receiver.specs.autoscaling.`targetMemoryUtilizationPercentage` | Memory consumption percentage threshold before creating more pods | number | 75 | false |
+| ***`receiver.specs.resources`*** : _resources configuration_ |
+| receiver.specs.resources..limits.`cpu` | Amount of cores to allocate to the pod (hard limit) | number | 2 | `true` |
+| receiver.specs.resources.limits.`memory` | Amount of memory to allocate to the pod (hard limit) | string | 2Gi | `true` |
+| receiver.specs.resources.requests.`cpu` | Amount of cores to allocate to the pod (soft limit) | number | 1 | `true` |
+| receiver.specs.resources.requests.`memory` | Amount of cores to allocate to the pod (soft limit) | string | 1Gi | `true` |
+| ***`receiver.specs.probe`*** : _pod state monitoring_ |
+| receiver.specs.probe.readinessProbe.httpGet.`path` | (Readiness) HTTP uri to run health-check against | string | / | `true` |
+| receiver.specs.probe.readinessProbe.httpGet.`port` | (Readiness) HTTP port to run health-check against | number | 8090 | `true` |
+| receiver.specs.probe.readinessProbe.`initialDelaySeconds` | (Readiness) How many seconds to wait before first request to probe the state | number | 10 | `true` |
+| receiver.specs.probe.readinessProbe.`periodSeconds` | (Readiness) TTL of request to probe the state | number | 3 | `true` |
+| receiver.specs.probe.livenessProbe.httpGet.`path` | (Liveness) HTTP uri to run health-check against | string | / | `true` |
+| receiver.specs.probe.livenessProbe.httpGet.`port` | (Liveness) HTTP port to run health-check against | number | 8090 | `true` |
+| receiver.specs.probe.livenessProbe.`initialDelaySeconds` | (Liveness) How many seconds to wait before first request to probe the state | number | 10 | `true` |
+| receiver.specs.probe.livenessProbe.`periodSeconds` | (Liveness) TTL of request to probe the state | number | 3 | `true` |
+| ***`receiver.specs.volumes`*** : _pod volumes configuration_ |
+| receiver.specs.volumes.serviceConfig.`name` | Volume name | string | otel-lb-config | `true` |
+| receiver.specs.volumes.serviceConfig.`mountPath` | mount folder location (name) | string | /config | `true` |
+| receiver.specs.volumes.serviceConfig.`fileName` | configuration file name | string | config.yaml | `true` |
+| receiver.specs.volumes.`extraVolumes` | array of additional volumes | [] | [] | false |
+| receiver.specs.volumes.extraVolumes.`name` | volume name | string | | false |
+| receiver.specs.volumes.extraVolumes.`mountPath` | mount folder path | string | | false |
+| receiver.specs.volumes.extraVolumes.`subPath` | filename | string | | false |
+| receiver.specs.volumes.`extraSecretMounts` | array of additional secrets volumes | [] | [] | false |
+| receiver.specs.volumes.extraSecretMounts.[].`name` | volume name | string | | false |
+| receiver.specs.volumes.extraSecretMounts.[].`mountPath` | file location in the pod | string | | false |
+| receiver.specs.volumes.extraSecretMounts.[].`secretName` | secret name | string | | false |
+| receiver.specs.volumes.extraSecretMounts.[].`readOnly` | should use readOnly mount | boolean | true | false |
+| ***`receiver.specs.network`*** : _pod network configuration_ | default configuration already applied | 
+| receiver.specs.network.`localListenerIp` | IP address the application should accept requests from | string | 0.0.0.0 | `true` |
+| receiver.specs.network.`type` | Network type | string | None | `true` |
+| receiver.specs.network.`ports` | Port configuration array | [] | [] | `true` |
+| receiver.specs.network.ports.[].`name` | Port name | string | grpc | `true` |
+| receiver.specs.network.ports.[].`internalPort` | egress port number | number | 4317 | `true` |
+| receiver.specs.network.ports.[].`externalPort` | ingress port number | number | 4317 | `true` |
+| receiver.specs.network.ports.[].`protocol` | Port protocol | `TCP`, `UDP`, `ICMP` | TCP | `true` |
+| receiver.specs.network.istio.`enable` | Should enable istio | boolean | false | `true` |
+| receiver.specs.network.istio.`rules` | istio rules | [] | [] | false |
+| ***`receiver.specs.services`*** : _service configuration_ |
+| receiver.specs.service.[].`name` | Service name | string | opentelemetry-sampling-receiver | `true` |
+| receiver.specs.service.[].`serviceType` | Service type | `LoadBalancer`, `ClusterIP` | LoadBalancer | `true` |
+| receiver.specs.service.[].`selector` | key:value of pod labels | {} | component: otel-collector-receiver-pod | `true` |
+| receiver.specs.service.[].`ports` | service exposed ports | [] | (default configuration provided) | `true` |
+| receiver.specs.service.[].ports.[].`name` | port name | string | grpc | `true` |
+| receiver.specs.service.[].ports.[].`type` | port type | string | grpc | `true` |
+| receiver.specs.service.[].ports.[].`externalPort` | external port number | number | 4318 | `true` |
+| receiver.specs.service.[].ports.[].`internalPort` | internal port number | number | 4318 | `true` |
+| receiver.specs.service.[].ports.[].`protocol` | port protocol | `TCP`, `UDP`, `ICMP` | TCP | false |
+| receiver.specs.service.[].ports.[].`loadBalancer` | routing mechanism | object | simple: LEAST_CONN | `true` |
 ___
-## Sampling-Collector
+## collector
 _This section of parameters describes the  sampling_collector service_
 | Name | Description | Type/Options | Default | Required |
 | :--- | :--- | :---: | :---: | :---: |
-| sampling_collector.`env` | environment variables | object | {} | false | string | empty | `true` |
-| ***` sampling_collector.image`*** | _This section of parameters will be configure image policy. leaving values empty will populate values from the global section |
-| sampling_collector.image.`repository` | repository to pull the image from | string | public.ecr.aws/x3s3n8k7 | false |
-| sampling_collector.image.`pullPolicy` | repository to pull the image from | `Always`, `Never`, `IfNotPresent` | Always | false |
-| sampling_collector.image.`version` | image to pull (we're using the same tag when new version is release and tested) | string | specified to latest stable version | false |
-| sampling_collector.image.`name` | load balancing docker image name | string | otelcol-sampling | `true` |
-| ***` sampling_collector.metadata`*** |
-| sampling_collector.metadata.shared.`annotations` | annotations to be shared across all child objects | object | {} | false |
-| sampling_collector.metadata.shared.`labels` | labels to be shared across all child objects | object | {} | false |
-| sampling_collector.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`annotations` | annotations to be shared across all pods | object | {} | false |
-| sampling_collector.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`labels` | labels to be shared across all selected object | object | {} | false |
-| ***` sampling_collector.specs`*** : _This section of parameters define resources over the service_ |
-| ***` sampling_collector.specs.configuration`*** : _service configuration_ |
-| sampling_collector.specs.configuration.`endpoint` | timeout of connection in case of no response | string | 1s | `true` |
-| sampling_collector.specs.configuration.`decision_wait` | number of seconds to wait before closing the trace | string | 10s | `true` |
-| sampling_collector.specs.configuration.`num_traces` | number of traces to hold in the memory | number | 100 | `true` |
-| sampling_collector.specs.configuration.`expected_new_traces_per_sec` | number of expected traces per seconds | number | 10 | `true` |
-| sampling_collector.specs.configuration.`policies` | policy name (aspecto mapping | string | $$aspecto:tail_sampling_policy | `true` |
-| sampling_collector.specs.configuration.log.`enable` | should enable logging | boolean | false | false |
-| sampling_collector.specs.configuration.log.`level`  | log level | `fatal`, `error`, `info`, `debug` | error | false |
-| ***` sampling_collector.specs.autoscaling`*** : _hpa/autoscaling configuration_ |
-| sampling_collector.specs.autoscaling.`enable` | Turn on autoscaling | boolean | true | `true` |
-| sampling_collector.specs.autoscaling.`defaultReplicaCount` | replicaCount in case not using HPA | number | 3 | `true` |
-| sampling_collector.specs.autoscaling.`minReplicas` | minimum amount of pods | number | 3 | false |
-| sampling_collector.specs.autoscaling.`maxReplicas` | maximum amount of pods | number | 20 | false |
-| sampling_collector.specs.autoscaling.`targetCPUUtilizationPercentage` | CPU consumption percentage threshold before creating more pods | number | 75 | false | 
-| sampling_collector.specs.autoscaling.`targetMemoryUtilizationPercentage` | Memory consumption percentage threshold before creating more pods | number | 75 | false |
-| ***` sampling_collector.specs.resources`*** : _resources configuration_ |
-| sampling_collector.specs.resources..limits.`cpu` | Amount of cores to allocate to the pod (hard limit) | number | 2 | `true` |
-| sampling_collector.specs.resources.limits.`memory` | Amount of memory to allocate to the pod (hard limit) | string | 2Gi | `true` |
-| sampling_collector.specs.resources.requests.`cpu` | Amount of cores to allocate to the pod (soft limit) | number | 1 | `true` |
-| sampling_collector.specs.resources.requests.`memory` | Amount of cores to allocate to the pod (soft limit) | string | 1Gi | `true` |
-| ***` sampling_collector.specs.probe`*** : _pod state monitoring_ |
-| sampling_collector.specs.probe.readinessProbe.httpGet.`path` | (Readiness) HTTP uri to run health-check against | string | / | `true` |
-| sampling_collector.specs.probe.readinessProbe.httpGet.`port` | (Readiness) HTTP port to run health-check against | number | 8090 | `true` |
-| sampling_collector.specs.probe.readinessProbe.`initialDelaySeconds` | (Readiness) How many seconds to wait before first request to probe the state | number | 10 | `true` |
-| sampling_collector.specs.probe.readinessProbe.`periodSeconds` | (Readiness) TTL of request to probe the state | number | 3 | `true` |
-| sampling_collector.specs.probe.livenessProbe.httpGet.`path` | (Liveness) HTTP uri to run health-check against | string | / | `true` |
-| sampling_collector.specs.probe.livenessProbe.httpGet.`port` | (Liveness) HTTP port to run health-check against | number | 8090 | `true` |
-| sampling_collector.specs.probe.livenessProbe.`initialDelaySeconds` | (Liveness) How many seconds to wait before first request to probe the state | number | 10 | `true` |
-| sampling_collector.specs.probe.livenessProbe.`periodSeconds` | (Liveness) TTL of request to probe the state | number | 3 | `true` |
-| ***` sampling_collector.specs.volumes`*** : _pod volumes configuration_ |
-| sampling_collector.specs.volumes.serviceConfig.`name` | Volume name | string | otel-lb-config | `true` |
-| sampling_collector.specs.volumes.serviceConfig.`mountPath` | mount folder location (name) | string | /config | `true` |
-| sampling_collector.specs.volumes.serviceConfig.`fileName` | configuration file name | string | config.yaml | `true` |
-| sampling_collector.specs.volumes.`extraVolumes` | array of additional volumes | [] | [] | false |
-| sampling_collector.specs.volumes.extraVolumes.`name` | volume name | string | | false |
-| sampling_collector.specs.volumes.extraVolumes.`mountPath` | mount folder path | string | | false |
-| sampling_collector.specs.volumes.extraVolumes.`subPath` | filename | string | | false |
-| sampling_collector.specs.volumes.`extraSecretMounts` | array of additional secrets volumes | [] | [] | false |
-| sampling_collector.specs.volumes.extraSecretMounts.[].`name` | volume name | string | | false |
-| sampling_collector.specs.volumes.extraSecretMounts.[].`mountPath` | file location in the pod | string | | false |
-| sampling_collector.specs.volumes.extraSecretMounts.[].`secretName` | secret name | string | | false |
-| sampling_collector.specs.volumes.extraSecretMounts.[].`readOnly` | should use readOnly mount | boolean | true | false |
-| ***` sampling_collector.specs.network`*** : _pod network configuration_ | default configuration already applied | 
-| sampling_collector.specs.network.`localListenerIp` | IP address the application should accept requests from | string | 0.0.0.0 | `true` |
-| sampling_collector.specs.network.`type` | Network type | string | None | `true` |
-| sampling_collector.specs.network.`ports` | Port configuration array | [] | [] | `true` |
-| sampling_collector.specs.network.ports.[].`name` | Port name | string | grpc | `true` |
-| sampling_collector.specs.network.ports.[].`internalPort` | egress port number | number | 4317 | `true` |
-| sampling_collector.specs.network.ports.[].`externalPort` | ingress port number | number | 4317 | `true` |
-| sampling_collector.specs.network.ports.[].`protocol` | Port protocol | `TCP`, `UDP`, `ICMP` | TCP | `true` |
-| sampling_collector.specs.network.istio.`enable` | Should enable istio | boolean | false | `true` |
-| sampling_collector.specs.network.istio.`rules` | istio rules | [] | [] | false |
-| ***` sampling_collector.specs.services`*** : _service configuration_ |
-| sampling_collector.specs.service.[].`name` | Service name | string | opentelemetry-sampling | `true` |
-| sampling_collector.specs.service.[].`serviceType` | Service type | `LoadBalancer`, `ClusterIP` | ClusterIP | `true` |
-| sampling_collector.specs.service.[].`selector` | key:value of pod labels | {} | component: otel-collector-load-balancer-pod | `true` |
-| sampling_collector.specs.service.[].`ports` | service exposed ports | [] | (default configuration provided) | `true` |
-| sampling_collector.specs.service.[].ports.[].`name` | port name | string | grpc | `true` |
-| sampling_collector.specs.service.[].ports.[].`type` | port type | string | grpc | `true` |
-| sampling_collector.specs.service.[].ports.[].`externalPort` | external port number | number | 8081 | `true` |
-| sampling_collector.specs.service.[].ports.[].`internalPort` | internal port number | number | 4318 | `true` |
-| sampling_collector.specs.service.[].ports.[].`protocol` | port protocol | `TCP`, `UDP`, `ICMP` | TCP | false |
-| sampling_collector.specs.service.[].ports.[].`loadBalancer` | routing mechanism | object | simple: LEAST_CONN | `true` |
+| collector.`env` | environment variables | object | {} | false | string | empty | `true` |
+| ***` collector.image`*** | _This section of parameters will be configure image policy. leaving values empty will populate values from the global section |
+| collector.image.`repository` | repository to pull the image from | string | public.ecr.aws/x3s3n8k7 | false |
+| collector.image.`pullPolicy` | repository to pull the image from | `Always`, `Never`, `IfNotPresent` | Always | false |
+| collector.image.`version` | image to pull (we're using the same tag when new version is release and tested) | string | specified to latest stable version | false |
+| collector.image.`name` | load balancing docker image name | string | otelcol-sampling | `true` |
+| ***` collector.metadata`*** |
+| collector.metadata.shared.`annotations` | annotations to be shared across all child objects | object | {} | false |
+| collector.metadata.shared.`labels` | labels to be shared across all child objects | object | {} | false |
+| collector.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`annotations` | annotations to be shared across all pods | object | {} | false |
+| collector.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`labels` | labels to be shared across all selected object | object | {} | false |
+| ***` collector.specs`*** : _This section of parameters define resources over the service_ |
+| ***` collector.specs.configuration`*** : _service configuration_ |
+| collector.specs.configuration.`endpoint` | timeout of connection in case of no response | string | 1s | `true` |
+| collector.specs.configuration.`decision_wait` | number of seconds to wait before closing the trace | string | 10s | `true` |
+| collector.specs.configuration.`num_traces` | number of traces to hold in the memory | number | 100 | `true` |
+| collector.specs.configuration.`expected_new_traces_per_sec` | number of expected traces per seconds | number | 10 | `true` |
+| collector.specs.configuration.`policies` | policy name (aspecto mapping | string | $$aspecto:tail_sampling_policy | `true` |
+| collector.specs.configuration.log.`enable` | should enable logging | boolean | false | false |
+| collector.specs.configuration.log.`level`  | log level | `fatal`, `error`, `info`, `debug` | error | false |
+| ***` collector.specs.autoscaling`*** : _hpa/autoscaling configuration_ |
+| collector.specs.autoscaling.`enable` | Turn on autoscaling | boolean | true | `true` |
+| collector.specs.autoscaling.`defaultReplicaCount` | replicaCount in case not using HPA | number | 3 | `true` |
+| collector.specs.autoscaling.`minReplicas` | minimum amount of pods | number | 3 | false |
+| collector.specs.autoscaling.`maxReplicas` | maximum amount of pods | number | 20 | false |
+| collector.specs.autoscaling.`targetCPUUtilizationPercentage` | CPU consumption percentage threshold before creating more pods | number | 75 | false | 
+| collector.specs.autoscaling.`targetMemoryUtilizationPercentage` | Memory consumption percentage threshold before creating more pods | number | 75 | false |
+| ***` collector.specs.resources`*** : _resources configuration_ |
+| collector.specs.resources..limits.`cpu` | Amount of cores to allocate to the pod (hard limit) | number | 2 | `true` |
+| collector.specs.resources.limits.`memory` | Amount of memory to allocate to the pod (hard limit) | string | 2Gi | `true` |
+| collector.specs.resources.requests.`cpu` | Amount of cores to allocate to the pod (soft limit) | number | 1 | `true` |
+| collector.specs.resources.requests.`memory` | Amount of cores to allocate to the pod (soft limit) | string | 1Gi | `true` |
+| ***` collector.specs.probe`*** : _pod state monitoring_ |
+| collector.specs.probe.readinessProbe.httpGet.`path` | (Readiness) HTTP uri to run health-check against | string | / | `true` |
+| collector.specs.probe.readinessProbe.httpGet.`port` | (Readiness) HTTP port to run health-check against | number | 8090 | `true` |
+| collector.specs.probe.readinessProbe.`initialDelaySeconds` | (Readiness) How many seconds to wait before first request to probe the state | number | 10 | `true` |
+| collector.specs.probe.readinessProbe.`periodSeconds` | (Readiness) TTL of request to probe the state | number | 3 | `true` |
+| collector.specs.probe.livenessProbe.httpGet.`path` | (Liveness) HTTP uri to run health-check against | string | / | `true` |
+| collector.specs.probe.livenessProbe.httpGet.`port` | (Liveness) HTTP port to run health-check against | number | 8090 | `true` |
+| collector.specs.probe.livenessProbe.`initialDelaySeconds` | (Liveness) How many seconds to wait before first request to probe the state | number | 10 | `true` |
+| collector.specs.probe.livenessProbe.`periodSeconds` | (Liveness) TTL of request to probe the state | number | 3 | `true` |
+| ***` collector.specs.volumes`*** : _pod volumes configuration_ |
+| collector.specs.volumes.serviceConfig.`name` | Volume name | string | otel-lb-config | `true` |
+| collector.specs.volumes.serviceConfig.`mountPath` | mount folder location (name) | string | /config | `true` |
+| collector.specs.volumes.serviceConfig.`fileName` | configuration file name | string | config.yaml | `true` |
+| collector.specs.volumes.`extraVolumes` | array of additional volumes | [] | [] | false |
+| collector.specs.volumes.extraVolumes.`name` | volume name | string | | false |
+| collector.specs.volumes.extraVolumes.`mountPath` | mount folder path | string | | false |
+| collector.specs.volumes.extraVolumes.`subPath` | filename | string | | false |
+| collector.specs.volumes.`extraSecretMounts` | array of additional secrets volumes | [] | [] | false |
+| collector.specs.volumes.extraSecretMounts.[].`name` | volume name | string | | false |
+| collector.specs.volumes.extraSecretMounts.[].`mountPath` | file location in the pod | string | | false |
+| collector.specs.volumes.extraSecretMounts.[].`secretName` | secret name | string | | false |
+| collector.specs.volumes.extraSecretMounts.[].`readOnly` | should use readOnly mount | boolean | true | false |
+| ***` collector.specs.network`*** : _pod network configuration_ | default configuration already applied | 
+| collector.specs.network.`localListenerIp` | IP address the application should accept requests from | string | 0.0.0.0 | `true` |
+| collector.specs.network.`type` | Network type | string | None | `true` |
+| collector.specs.network.`ports` | Port configuration array | [] | [] | `true` |
+| collector.specs.network.ports.[].`name` | Port name | string | grpc | `true` |
+| collector.specs.network.ports.[].`internalPort` | egress port number | number | 4317 | `true` |
+| collector.specs.network.ports.[].`externalPort` | ingress port number | number | 4317 | `true` |
+| collector.specs.network.ports.[].`protocol` | Port protocol | `TCP`, `UDP`, `ICMP` | TCP | `true` |
+| collector.specs.network.istio.`enable` | Should enable istio | boolean | false | `true` |
+| collector.specs.network.istio.`rules` | istio rules | [] | [] | false |
+| ***` collector.specs.services`*** : _service configuration_ |
+| collector.specs.service.[].`name` | Service name | string | opentelemetry-sampling | `true` |
+| collector.specs.service.[].`serviceType` | Service type | `LoadBalancer`, `ClusterIP` | ClusterIP | `true` |
+| collector.specs.service.[].`selector` | key:value of pod labels | {} | component: otel-collector-receiver-pod | `true` |
+| collector.specs.service.[].`ports` | service exposed ports | [] | (default configuration provided) | `true` |
+| collector.specs.service.[].ports.[].`name` | port name | string | grpc | `true` |
+| collector.specs.service.[].ports.[].`type` | port type | string | grpc | `true` |
+| collector.specs.service.[].ports.[].`externalPort` | external port number | number | 8081 | `true` |
+| collector.specs.service.[].ports.[].`internalPort` | internal port number | number | 4318 | `true` |
+| collector.specs.service.[].ports.[].`protocol` | port protocol | `TCP`, `UDP`, `ICMP` | TCP | false |
+| collector.specs.service.[].ports.[].`loadBalancer` | routing mechanism | object | simple: LEAST_CONN | `true` |
 ___
 # Resources planning
 

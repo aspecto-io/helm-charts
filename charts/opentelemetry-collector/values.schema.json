@@ -21,7 +21,7 @@
                         "name": {
                             "type": "string",
                             "description": "prefix for child objects",
-                            "default": "load-balancer"
+                            "default": "receiver"
                         },
                         "shared": {
                             "type": "object",
@@ -253,7 +253,7 @@
                         "name": {
                             "type": "string",
                             "description": "prefix for child objects",
-                            "default": "load-balancer"
+                            "default": "receiver"
                         },
                         "shared": {
                             "type": "object",
@@ -827,7 +827,7 @@
                         "name": {
                             "type": "string",
                             "description": "prefix for child objects",
-                            "default": "load-balancer"
+                            "default": "receiver"
                         },
                         "shared": {
                             "type": "object",

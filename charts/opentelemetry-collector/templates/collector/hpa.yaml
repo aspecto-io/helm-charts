@@ -3,18 +3,18 @@
 {{- $globalObjectLabels := $globalMetadata.hpa.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.hpa.annotations }}
-{{- $localMetadata := .Values.sampling_collector.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.hpa.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.hpa.labels -}}
-{{- $localListenerIp := .Values.sampling_collector.specs.network.localListenerIp -}}
-{{- if .Values.sampling_collector.specs.autoscaling.enable }}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+{{- if .Values.collector.specs.autoscaling.enable }}
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ .Values.global.name }}-{{ $localMetadata.name }}-hpa
-  namespace: {{ .Values.sampling_collector.metadata.namespace | default .Values.global.namespace }}
+  namespace: {{ .Values.collector.metadata.namespace | default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
 {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
 {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
@@ -28,10 +28,10 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ .Values.global.name }}-{{ $localMetadata.name }}-deployment
-  minReplicas: {{ .Values.sampling_collector.specs.autoscaling.minReplicas }} 
-  maxReplicas: {{ .Values.sampling_collector.specs.autoscaling.maxReplicas }}
+  minReplicas: {{ .Values.collector.specs.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.collector.specs.autoscaling.maxReplicas }}
   metrics:
-  {{- with .Values.sampling_collector.specs.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- with .Values.collector.specs.autoscaling.targetMemoryUtilizationPercentage }}
   - type: Resource
     resource:
       name: memory
@@ -39,7 +39,7 @@ spec:
         type: Utilization
         averageUtilization: {{ . }}
   {{- end }}
-  {{- with .Values.sampling_collector.specs.autoscaling.targetCPUUtilizationPercentage }}
+  {{- with .Values.collector.specs.autoscaling.targetCPUUtilizationPercentage }}
   - type: Resource
     resource:
       name: cpu

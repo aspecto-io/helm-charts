@@ -1,15 +1,15 @@
 suite: test sampling-service deployment
 templates:
-  - sampling-service/deployment.yaml
-  - sampling-service/configMap.yaml
-  - sampling-service/service.yaml
-  - sampling-service/hpa.yaml
-  - sampling-service/virtualService.yaml
-  - sampling-service/destinationRule.yaml
-  - sampling-service/gateway.yaml
+  - collector/deployment.yaml
+  - collector/configMap.yaml
+  - collector/service.yaml
+  - collector/hpa.yaml
+  - collector/virtualService.yaml
+  - collector/destinationRule.yaml
+  - collector/gateway.yaml
 tests:
-  - it: sampling-service-deployment
-    template: sampling-service/deployment.yaml
+  - it: collector-deployment
+    template: collector/deployment.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
@@ -18,12 +18,12 @@ tests:
           of: Deployment
       - equal: 
           path: metadata.name
-          value: otel-collector-sampling-collector-deployment
+          value: otel-collector-collector-deployment
       - matchRegex:
           path: spec.template.spec.containers[0].image
           pattern: .*otelcol-sampling:latest
-  - it: sampling-service-service/virtualService.yaml
-    template: sampling-service/service.yaml
+  - it: collector-service/virtualService.yaml
+    template: collector/service.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
@@ -33,46 +33,46 @@ tests:
       - equal:
           path: spec.type
           value: ClusterIP
-  - it: sampling-service-hpa
-    template: sampling-service/hpa.yaml
+  - it: collector-hpa
+    template: collector/hpa.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
     set:
-      sampling_collector.specs.autoscaling.enable: true
+      collector.specs.autoscaling.enable: true
     asserts:
       - isKind:
           of: HorizontalPodAutoscaler
-  - it: sampling-service-virtualService
-    template: sampling-service/virtualService.yaml
+  - it: collector-virtualService
+    template: collector/virtualService.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
     set:
-      sampling_collector.specs.network.istio.enabled: true
+      collector.specs.network.istio.enabled: true
     asserts:
       - isKind:
           of: VirtualService
       - isAPIVersion:
           of: networking.istio.io/v1
-  - it: sampling-service-destinationRule
-    template: sampling-service/destinationRule.yaml
+  - it: collector-destinationRule
+    template: collector/destinationRule.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
     set:
-      sampling_collector.specs.network.istio.enabled: true
-      sampling_collector.specs.services.[0].serviceType: LoadBalancer
+      collector.specs.network.istio.enabled: true
+      collector.specs.services.[0].serviceType: LoadBalancer
     asserts:
       - isKind:
           of: DestinationRule
-  - it: sampling-service-gateway
-    template: sampling-service/gateway.yaml
+  - it: collector-gateway
+    template: collector/gateway.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
     set:
-      sampling_collector.specs.network.istio.enabled: true
+      collector.specs.network.istio.enabled: true
     asserts:
       - isKind:
           of: Gateway

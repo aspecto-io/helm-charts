@@ -12,8 +12,8 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
-  namespace: {{ .Values.sampling_collector.metadata.namespace | default .Values.global.namespace }}
+  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
+  namespace: {{ .Values.collector.metadata.namespace | default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
 {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
 {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
@@ -30,11 +30,11 @@ data:
     {{- range .Values.receiver.specs.network.ports }}
     {{- if eq .name "grpc"}}
           grpc:
-            endpoint: {{ $root.Values.load_balancer.specs.network.localListenerIp }}:{{ .internalPort }}
+            endpoint: {{ $root.Values.receiver.specs.network.localListenerIp }}:{{ .internalPort }}
     {{- end}}
     {{- if eq .name "http"}}
           http:
-            endpoint: {{ $root.Values.load_balancer.specs.network.localListenerIp }}:{{ .internalPort }}
+            endpoint: {{ $root.Values.receiver.specs.network.localListenerIp }}:{{ .internalPort }}
     {{- end}}
     {{- end}}
 
@@ -47,11 +47,11 @@ data:
               insecure: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.otlp.tls.insecure }}
         resolver:
           dns:
-            {{- with ( first .Values.sampling_collector.specs.services ) }}
+            {{- with ( first .Values.collector.specs.services ) }}
             {{- if eq .serviceType "ClusterIP" }}
-            hostname: {{ $root.Values.global.name }}-{{ $root.Values.sampling_collector.metadata.name }}-{{ .name }}-service
+            hostname: {{ $root.Values.global.name }}-{{ $root.Values.collector.metadata.name }}-{{ .name }}-service.{{ $root.Values.collector.metadata.namespace |  default $root.Values.global.namespace }}
             {{ else }}
-            hostname: {{ required "Missing configuration of load_balancer.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname" $root.Values.load_balancer.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname }}
+            hostname: {{ required "Missing configuration of receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname" $root.Values.receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname }}
             {{- end }}
             {{- end }}
             port: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.port }}
@@ -60,7 +60,7 @@ data:
     {{- if eq .name "health-check"}}
     extensions:
       health_check:
-        endpoint: "{{ $root.Values.load_balancer.specs.network.localListenerIp }}:{{ .internalPort }}"
+        endpoint: "{{ $root.Values.receiver.specs.network.localListenerIp }}:{{ .internalPort }}"
     {{- end}}
     {{- end}}
 

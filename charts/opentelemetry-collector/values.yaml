@@ -17,8 +17,8 @@ global:
         helm/deploymentTimestamp: "{{ now | unixEpoch }}"
       labels:
         app: opentelemetry
-        loadBalancerVersion: "{{ .Values.load_balancer.image.version | default .Values.global.image.version }}"
-        samplingCollectorVersion: "{{ .Values.sampling_collector.image.version | default .Values.global.image.version }}"
+        loadBalancerVersion: "{{ .Values.receiver.image.version | default .Values.global.image.version }}"
+        samplingCollectorVersion: "{{ .Values.collector.image.version | default .Values.global.image.version }}"
         chart/name: "{{ .Chart.Name }}"
         chart/release: "{{ .Chart.Version }}"
     pod:
@@ -53,7 +53,7 @@ global:
     pullPolicy: Always
     version: 'v0.0.1'
 
-load_balancer:
+receiver:
   image:
     repository: ''
     policy: IfNotPresent
@@ -61,7 +61,7 @@ load_balancer:
     version: ''
 
   metadata:
-    name: load-balancer
+    name: receiver
     namespace: ''
     shared:
       annotations: {}
@@ -69,14 +69,14 @@ load_balancer:
     pod:
       annotations: {}
       labels:
-        component: otel-collector-load-balancer-pod
+        component: otel-receiver-pod
     deployment:
       annotations: {}
       labels: {}
     service:
       annotations: {}
       labels:
-        component: otel-collector-load-balancer-service
+        component: otel-receiver-service
     configMap:
       annotations: {}
       labels: {}
@@ -95,6 +95,11 @@ load_balancer:
 
   env: {}
 
+  monitoring:
+    enable: true
+    promNamespace: monitoring
+    portName: metrics
+
   specs:
     configuration:
       exporters:
@@ -107,7 +112,7 @@ load_balancer:
             resolver:
               dns:
                 hostname:
-                port: 4137
+                port: 8081
       log:
         enable: true
         level: debug
@@ -147,7 +152,7 @@ load_balancer:
       serviceConfig:
         name: service-configuration
         mountPath: /config
-        fileName: loadbalancing-config.yml
+        fileName: receiver-config.yml
       extraVolumes: []
       # - name: configMapName
       #   mountPath: /folder/path
@@ -179,6 +184,14 @@ load_balancer:
           internalPort: 8090
           externalPort: 8090
           protocol: TCP
+        - name: metrics-col
+          internalPort: 9090
+          externalPort: 9090
+          protocol: TCP
+        - name: zipkin
+          internalPort: 9411
+          externalPort: 9411
+          protocol: TCP
       istio:
         enabled: false
         rules:
@@ -191,7 +204,7 @@ load_balancer:
             - '*'
 
     services:
-      - name: loadbalancer
+      - name: load-balancer
         # Currently, we support 3 service types (ClusterIP, LoadBalancer)
         # Internal - An internal service is a service that would only be accessed from inside the Kubernetes cluster.
         # It will receive an internal IP address that other Kubernetes services could access to consume the service from.
@@ -205,7 +218,7 @@ load_balancer:
         serviceType: LoadBalancer
 
         selector:
-          component: otel-collector-load-balancer-pod
+          component: otel-receiver-pod
 
         ports:
           - name: grpc          # Name of the port (Should match one of the ports in the containers)
@@ -219,6 +232,13 @@ load_balancer:
             type: http
             externalPort: 4318
             internalPort: 4318
+            protocol: TCP
+            loadBalancer:
+              simple: LEAST_CONN
+          - name: zipkin
+            type: http
+            externalPort: 8085
+            internalPort: 9411
             protocol: TCP
             loadBalancer:
               simple: LEAST_CONN
@@ -236,8 +256,15 @@ load_balancer:
             protocol: TCP
             loadBalancer:
               simple: LEAST_CONN
+          - name: metrics-col
+            type: http
+            externalPort: 9090
+            internalPort: 9090
+            protocol: TCP
+            loadBalancer:
+              simple: LEAST_CONN
 
-sampling_collector:
+collector:
   image:
     repository: ''
     policy: Always
@@ -245,7 +272,7 @@ sampling_collector:
     version: ''
 
   metadata:
-    name: sampling-collector
+    name: collector
     namespace: ''
     shared:
       annotations: {}
@@ -253,7 +280,7 @@ sampling_collector:
     pod:
       annotations: {}
       labels:
-        component: otel-collector-sampling-collector
+        component: otel-collector
     deployment:
       annotations: {}
       labels: {}
@@ -277,6 +304,11 @@ sampling_collector:
       labels: {}
 
   env: {}
+
+  monitoring:
+    enable: true
+    promNamespace: monitoring
+    portName: metrics
 
   specs:
     configuration:
@@ -323,7 +355,7 @@ sampling_collector:
       serviceConfig:
         name: service-configuration
         mountPath: /config
-        fileName: sampling-config.yml
+        fileName: collector-config.yml
       extraVolumes: []
       # - name: configMapName
       #   mountPath: /folder/path
@@ -356,6 +388,14 @@ sampling_collector:
           internalPort: 8090
           externalPort: 8090
           protocol: TCP
+        - name: metrics-col
+          internalPort: 9090
+          externalPort: 9090
+          protocol: TCP
+        - name: zipkin
+          internalPort: 9411
+          externalPort: 9411
+          protocol: TCP
       istio:
         enabled: false
         rules:
@@ -368,7 +408,7 @@ sampling_collector:
               - '*'
 
     services:
-      - name: tail-sampling
+      - name: opentelemetry-sampling
         # Currently, we support 2 service types (ClusterIP, LoadBalancer)
         # Internal - An internal service is a service that would only be accessed from inside the Kubernetes cluster.
         # It will receive an internal IP address that other Kubernetes services could access to consume the service from.
@@ -382,7 +422,7 @@ sampling_collector:
         serviceType: ClusterIP
 
         selector:
-          component: otel-collector-sampling-collector
+          component: otel-collector
 
         ports:
           - name: grpc            # Name of the port (Should match one of the ports in the containers)
@@ -391,7 +431,7 @@ sampling_collector:
             internalPort: 4317    # Port the service accesses when redirecting to the pod
             protocol: TCP
             selector:
-              component: sampling-collector
+              component: collector
             loadBalancer:
               simple: LEAST_CONN
           - name: http
@@ -400,9 +440,16 @@ sampling_collector:
             internalPort: 4318
             protocol: TCP
             selector:
-              component: sampling-collector
+              component: collector
             loadBalancer:
               simple: LEAST_CONN  # We support only simple load balancing algorithms. the valid options are <ROUND_ROBIN/LEAST_CONN/RANDOM>
+          - name: zipkin
+            type: http
+            externalPort: 8085
+            internalPort: 9411
+            protocol: TCP
+            loadBalancer:
+              simple: LEAST_CONN
           - name: health-check
             type: http
             externalPort: 8083
@@ -414,6 +461,13 @@ sampling_collector:
             type: http
             externalPort: 8084
             internalPort: 8888
+            protocol: TCP
+            loadBalancer:
+              simple: LEAST_CONN
+          - name: metrics-col
+            type: http
+            externalPort: 9090
+            internalPort: 9090
             protocol: TCP
             loadBalancer:
               simple: LEAST_CONN

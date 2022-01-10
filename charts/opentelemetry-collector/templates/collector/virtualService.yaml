@@ -4,14 +4,14 @@
 {{- $globalObjectLabels := $globalMetadata.virtualService.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.virtualService.annotations }}
-{{- $localMetadata := .Values.sampling_collector.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.virtualService.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.virtualService.labels -}}
-{{- $localListenerIp := .Values.sampling_collector.specs.network.localListenerIp -}}
-{{- if .Values.sampling_collector.specs.network.istio.enabled }}
-{{- range .Values.sampling_collector.specs.network.istio.rules }}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+{{- if .Values.collector.specs.network.istio.enabled }}
+{{- range .Values.collector.specs.network.istio.rules }}
 
 apiVersion: networking.istio.io/v1
 kind: VirtualService
@@ -37,7 +37,7 @@ spec:
           prefix: {{ .uriPrefix }}
       route:
       - destination:
-          host: {{ $root.Values.sampling_collector.specs.network.serviceName }}
+          host: {{ $root.Values.collector.specs.network.serviceName }}
           port:
             number: {{ .destinationPort }}
   {{- end }}

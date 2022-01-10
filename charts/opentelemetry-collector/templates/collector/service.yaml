@@ -4,13 +4,13 @@
 {{- $globalObjectLabels := $globalMetadata.service.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.service.annotations }}
-{{- $localMetadata := .Values.sampling_collector.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.service.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.service.labels -}}
-{{- $localListenerIp := .Values.sampling_collector.specs.network.localListenerIp -}}
-{{- range .Values.sampling_collector.specs.services }}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+{{- range .Values.collector.specs.services }}
 ---
 apiVersion: v1
 kind: Service
