@@ -4,7 +4,7 @@
 {{- $globalObjectLabels := $globalMetadata.configMap.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.configMap.annotations }}
-{{- $localMetadata := .Values.load_balancer.metadata -}}
+{{- $localMetadata := .Values.receiver.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.configMap.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
@@ -23,11 +23,11 @@ metadata:
 {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
 {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 data:
-  {{ .Values.load_balancer.specs.volumes.serviceConfig.fileName }}: |
+  {{ .Values.receiver.specs.volumes.serviceConfig.fileName }}: |
     receivers:
       otlp:
         protocols:
-    {{- range .Values.load_balancer.specs.network.ports }}
+    {{- range .Values.receiver.specs.network.ports }}
     {{- if eq .name "grpc"}}
           grpc:
             endpoint: {{ $root.Values.load_balancer.specs.network.localListenerIp }}:{{ .internalPort }}
@@ -42,9 +42,9 @@ data:
       loadbalancing:
         protocol:
           otlp:
-            timeout: {{ .Values.load_balancer.specs.configuration.exporters.load_balancing.protocol.otlp.timeout }}
+            timeout: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.otlp.timeout }}
             tls:
-              insecure: {{ .Values.load_balancer.specs.configuration.exporters.load_balancing.protocol.otlp.tls.insecure }}
+              insecure: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.otlp.tls.insecure }}
         resolver:
           dns:
             {{- with ( first .Values.sampling_collector.specs.services ) }}
@@ -54,9 +54,9 @@ data:
             hostname: {{ required "Missing configuration of load_balancer.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname" $root.Values.load_balancer.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname }}
             {{- end }}
             {{- end }}
-            port: {{ .Values.load_balancer.specs.configuration.exporters.load_balancing.protocol.resolver.dns.port }}
+            port: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.port }}
 
-    {{- range .Values.load_balancer.specs.network.ports }}
+    {{- range .Values.receiver.specs.network.ports }}
     {{- if eq .name "health-check"}}
     extensions:
       health_check:

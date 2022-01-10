@@ -1,19 +1,22 @@
 {{- $root := . -}}
 {{- $globalMetadata := .Values.global.metadata -}}
 {{- $globalSharedLabels := $globalMetadata.shared.labels -}}
-{{- $globalObjectLabels := $globalMetadata.gateway.labels }}
+{{- $globalObjectLabels := $globalMetadata.destinationRule.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
-{{- $globalObjectAnnotations := $globalMetadata.gateway.annotations }}
-{{- $localMetadata := .Values.load_balancer.metadata -}}
+{{- $globalObjectAnnotations := $globalMetadata.destinationRule.annotations }}
+{{- $localMetadata := .Values.receiver.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
-{{- $localObjectAnnotations := $localMetadata.gateway.annotations -}}
+{{- $localObjectAnnotations := $localMetadata.destinationRule.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
-{{- $localObjectLabels := $localMetadata.gateway.labels -}}
-{{- if .Values.load_balancer.specs.network.istio.enabled }}
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
+{{- $localObjectLabels := $localMetadata.destinationRule.labels -}}
+{{- if .Values.receiver.specs.network.istio.enabled }}
+{{- range .Values.receiver.specs.services }}
+{{- if eq .serviceType "LoadBalancer" }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
 metadata:
-  name: grpc-{{ .Values.global.name }}-{{ $localMetadata.name }}-gateway
+  name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-{{ .name }}-balancer
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
 {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
 {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
@@ -23,13 +26,15 @@ metadata:
 {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
 {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
-  selector:
-    istio: ingressgateway
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - {{ .Values.load_balancer.specs.configuration.endpoint }}
+  host: {{ .name }}
+  trafficPolicy:
+    portLevelSettings:
+    {{- range .ports }}
+    - port:
+        number: {{ .internalPort }}
+      loadBalancer:
+        simple: {{ .loadBalancer.simple }}
+    {{- end }}
+{{- end }}
+{{- end }}
 {{- end }}

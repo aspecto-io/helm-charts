@@ -1,22 +1,21 @@
 {{- $root := . -}}
 {{- $globalMetadata := .Values.global.metadata -}}
 {{- $globalSharedLabels := $globalMetadata.shared.labels -}}
-{{- $globalObjectLabels := $globalMetadata.destinationRule.labels }}
+{{- $globalObjectLabels := $globalMetadata.service.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
-{{- $globalObjectAnnotations := $globalMetadata.destinationRule.annotations }}
-{{- $localMetadata := .Values.load_balancer.metadata -}}
+{{- $globalObjectAnnotations := $globalMetadata.service.annotations }}
+{{- $localMetadata := .Values.receiver.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
-{{- $localObjectAnnotations := $localMetadata.destinationRule.annotations -}}
+{{- $localObjectAnnotations := $localMetadata.service.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
-{{- $localObjectLabels := $localMetadata.destinationRule.labels -}}
-{{- if .Values.load_balancer.specs.network.istio.enabled }}
-{{- range .Values.load_balancer.specs.services }}
-{{- if eq .serviceType "LoadBalancer" }}
----
-apiVersion: networking.istio.io/v1beta1
-kind: DestinationRule
+{{- $localObjectLabels := $localMetadata.service.labels -}}
+{{- range .Values.receiver.specs.services }}
+
+apiVersion: v1
+kind: Service
 metadata:
-  name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-{{ .name }}-balancer
+  name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-{{ .name }}-service
+  namespace: {{ $localMetadata.namespace | default $root.Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
 {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
 {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
@@ -26,15 +25,14 @@ metadata:
 {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
 {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
-  host: {{ .name }}
-  trafficPolicy:
-    portLevelSettings:
+  type: {{ .serviceType }}
+  ports:
     {{- range .ports }}
-    - port:
-        number: {{ .internalPort }}
-      loadBalancer:
-        simple: {{ .loadBalancer.simple }}
-    {{- end }}
-{{- end }}
-{{- end }}
+    - port: {{ .externalPort }}
+      targetPort: {{ .internalPort }}
+      protocol: {{ .protocol }}
+      name: {{ .name }}
+    {{- end}}
+  selector:
+    {{- toYaml .selector | nindent 4}}
 {{- end }}

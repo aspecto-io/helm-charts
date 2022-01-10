@@ -4,13 +4,13 @@
 {{- $globalObjectLabels := $globalMetadata.virtualService.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.virtualService.annotations }}
-{{- $localMetadata := .Values.load_balancer.metadata -}}
+{{- $localMetadata := .Values.receiver.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.virtualService.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.virtualService.labels -}}
-{{- if .Values.load_balancer.specs.network.istio.enabled }}
-{{- range .Values.load_balancer.specs.network.istio.rules }}
+{{- if .Values.receiver.specs.network.istio.enabled }}
+{{- range .Values.receiver.specs.network.istio.rules }}
 
 apiVersion: networking.istio.io/v1
 kind: VirtualService

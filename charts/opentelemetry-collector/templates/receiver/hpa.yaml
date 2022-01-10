@@ -3,12 +3,12 @@
 {{- $globalObjectLabels := $globalMetadata.hpa.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.hpa.annotations }}
-{{- $localMetadata := .Values.load_balancer.metadata -}}
+{{- $localMetadata := .Values.receiver.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.hpa.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.hpa.labels -}}
-{{- if .Values.load_balancer.specs.autoscaling.enable }}
+{{- if .Values.receiver.specs.autoscaling.enable }}
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -27,10 +27,10 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ .Values.global.name }}-{{ $localMetadata.name }}-deployment
-  minReplicas: {{ .Values.load_balancer.specs.autoscaling.minReplicas }} 
-  maxReplicas: {{ .Values.load_balancer.specs.autoscaling.maxReplicas }} 
+  minReplicas: {{ .Values.receiver.specs.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.receiver.specs.autoscaling.maxReplicas }}
   metrics:
-  {{- with .Values.load_balancer.specs.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- with .Values.receiver.specs.autoscaling.targetMemoryUtilizationPercentage }}
   - type: Resource
     resource:
       name: memory
@@ -38,7 +38,7 @@ spec:
         type: Utilization
         averageUtilization: {{ . }}
   {{- end }}
-  {{- with .Values.load_balancer.specs.autoscaling.targetCPUUtilizationPercentage }}
+  {{- with .Values.receiver.specs.autoscaling.targetCPUUtilizationPercentage }}
   - type: Resource
     resource:
       name: cpu
