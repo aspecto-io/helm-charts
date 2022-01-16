@@ -15,13 +15,13 @@ metadata:
   name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
   namespace: {{ .Values.collector.metadata.namespace | default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
   annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
-{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
-{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 data:
   {{ .Values.receiver.specs.volumes.serviceConfig.fileName }}: |
     receivers:
@@ -47,7 +47,7 @@ data:
               insecure: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.otlp.tls.insecure }}
         resolver:
           dns:
-            {{- with ( first .Values.collector.specs.services ) }}
+            {{- with ( first $root.Values.collector.specs.services ) }}
             {{- if eq .serviceType "ClusterIP" }}
             hostname: {{ $root.Values.global.name }}-{{ $root.Values.collector.metadata.name }}-{{ .name }}-service.{{ $root.Values.collector.metadata.namespace |  default $root.Values.global.namespace }}
             {{ else }}

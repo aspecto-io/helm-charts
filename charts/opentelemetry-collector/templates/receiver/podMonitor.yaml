@@ -1,18 +1,18 @@
 {{- $root := . -}}
   {{- $globalMetadata := .Values.global.metadata -}}
   {{- $globalSharedLabels := $globalMetadata.shared.labels -}}
-  {{- $globalObjectLabels := $globalMetadata.serviceMonitor.labels }}
+  {{- $globalObjectLabels := $globalMetadata.podMonitor.labels }}
   {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
-  {{- $globalObjectAnnotations := $globalMetadata.serviceMonitor.annotations }}
+  {{- $globalObjectAnnotations := $globalMetadata.podMonitor.annotations }}
   {{- $service := .Values.receiver -}}
   {{- $localMetadata := $service.metadata -}}
   {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
-  {{- $localObjectAnnotations := $localMetadata.serviceMonitor.annotations -}}
+  {{- $localObjectAnnotations := $localMetadata.podMonitor.annotations -}}
   {{- $localSharedLabels := $localMetadata.shared.labels -}}
-  {{- $localObjectLabels := $localMetadata.serviceMonitor.labels -}}
-  {{- if $service.monitoring.serviceMonitoring.enable }}
+  {{- $localObjectLabels := $localMetadata.podMonitor.labels -}}
+  {{- if $service.monitoring.podMonitoring.enable }}
 apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
+kind: PodMonitor
 metadata:
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
   {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
@@ -22,15 +22,13 @@ metadata:
   {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
   {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
-  name: {{.Values.global.name }}-{{ $localMetadata.name }}-monitor
-  namespace: {{ $service.monitoring.serviceMonitoring.promNamespace }}
+  app: prometheus
+  name: {{.Values.global.name }}-{{ $localMetadata.name }}-agent
+  namespace: {{ $localMetadata.namespace | default $root.Values.global.namespace }}
 spec:
-  endpoints:
-    - port: {{ $service.monitoring.serviceMonitoring.portName }}
-  namespaceSelector:
-    matchNames:
-      - {{ $localMetadata.namespace | default .Values.global.namespace }}
   selector:
     matchLabels:
-  {{- toYaml $localMetadata.service.labels | nindent 6 }}
+  {{- toYaml $localMetadata.pod.labels | nindent 6 }}
+  podMetricsEndpoints:
+  {{- toYaml $service.monitoring.podMonitoring.podMetricsEndpoints | nindent 2 }}
   {{- end}}

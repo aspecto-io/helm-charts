@@ -17,8 +17,8 @@ global:
         helm/deploymentTimestamp: "{{ now | unixEpoch }}"
       labels:
         app: opentelemetry
-        loadBalancerVersion: "{{ .Values.receiver.image.version | default .Values.global.image.version }}"
-        samplingCollectorVersion: "{{ .Values.collector.image.version | default .Values.global.image.version }}"
+        receiverVersion: "{{ .Values.receiver.image.version | default .Values.global.image.version }}"
+        collectorVersion: "{{ .Values.collector.image.version | default .Values.global.image.version }}"
         chart/name: "{{ .Chart.Name }}"
         chart/release: "{{ .Chart.Version }}"
     pod:
@@ -48,10 +48,16 @@ global:
     secret:
       annotations: {}
       labels: {}
+    serviceMonitor:
+      annotations: {}
+      labels: {}
+    podMonitor:
+      annotations: {}
+      labels: {}
   image:
     repository: 'public.ecr.aws/x3s3n8k7'
     pullPolicy: Always
-    version: 'v0.0.1'
+    version: 'v0.0.2'
 
 receiver:
   image:
@@ -92,13 +98,24 @@ receiver:
     gateway:
       annotations: {}
       labels: {}
+    serviceMonitor:
+      annotations: {}
+      labels: {}
+    podMonitor:
+      annotations: {}
+      labels: {}
 
   env: {}
 
   monitoring:
-    enable: true
-    promNamespace: monitoring
-    portName: metrics
+    serviceMonitoring:
+      enable: true
+      promNamespace: monitoring
+      portName: metrics
+    podMonitoring:
+      enable: false
+      podMetricsEndpoints:
+        # - port: prometheus
 
   specs:
     configuration:
@@ -112,7 +129,7 @@ receiver:
             resolver:
               dns:
                 hostname:
-                port: 8081
+                port: 4137
       log:
         enable: true
         level: debug
@@ -139,13 +156,13 @@ receiver:
         httpGet:
           path: /
           port: 8090
-        initialDelaySeconds: 10
+        initialDelaySeconds: 30
         periodSeconds: 3
       livenessProbe:
         httpGet:
           path: /
           port: 8090
-        initialDelaySeconds: 10
+        initialDelaySeconds: 30
         periodSeconds: 30
 
     volumes:
@@ -192,6 +209,7 @@ receiver:
           internalPort: 9411
           externalPort: 9411
           protocol: TCP
+
       istio:
         enabled: false
         rules:
@@ -235,13 +253,6 @@ receiver:
             protocol: TCP
             loadBalancer:
               simple: LEAST_CONN
-          - name: zipkin
-            type: http
-            externalPort: 8085
-            internalPort: 9411
-            protocol: TCP
-            loadBalancer:
-              simple: LEAST_CONN
           - name: health-check
             type: http
             externalPort: 8090
@@ -260,6 +271,13 @@ receiver:
             type: http
             externalPort: 9090
             internalPort: 9090
+            protocol: TCP
+            loadBalancer:
+              simple: LEAST_CONN
+          - name: zipkin
+            type: http
+            externalPort: 9411
+            internalPort: 9411
             protocol: TCP
             loadBalancer:
               simple: LEAST_CONN
@@ -286,7 +304,8 @@ collector:
       labels: {}
     service:
       annotations: {}
-      labels: {}
+      labels:
+        component: otel-collector-service
     configMap:
       annotations: {}
       labels: {}
@@ -302,13 +321,24 @@ collector:
     gateway:
       annotations: {}
       labels: {}
+    serviceMonitor:
+      annotations: {}
+      labels: {}
+    podMonitor:
+      annotations: {}
+      labels: {}
 
   env: {}
 
   monitoring:
-    enable: true
-    promNamespace: monitoring
-    portName: metrics
+    serviceMonitoring:
+      enable: true
+      promNamespace: monitoring
+      portName: metrics
+    podMonitoring:
+      enable: false
+      podMetricsEndpoints:
+      # - port: prometheus
 
   specs:
     configuration:
@@ -396,6 +426,7 @@ collector:
           internalPort: 9411
           externalPort: 9411
           protocol: TCP
+
       istio:
         enabled: false
         rules:
@@ -408,7 +439,7 @@ collector:
               - '*'
 
     services:
-      - name: opentelemetry-sampling
+      - name: tail-sampling
         # Currently, we support 2 service types (ClusterIP, LoadBalancer)
         # Internal - An internal service is a service that would only be accessed from inside the Kubernetes cluster.
         # It will receive an internal IP address that other Kubernetes services could access to consume the service from.

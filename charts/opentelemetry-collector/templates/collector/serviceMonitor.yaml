@@ -1,37 +1,36 @@
 {{- $root := . -}}
-{{- $globalMetadata := .Values.global.metadata -}}
-{{- $globalSharedLabels := $globalMetadata.shared.labels -}}
-{{- $globalObjectLabels := $globalMetadata.service.labels }}
-{{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
-{{- $globalObjectAnnotations := $globalMetadata.service.annotations }}
-{{- $service := .Values.collector -}}
-{{- $localMetadata := $service.metadata -}}
-{{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
-{{- $localObjectAnnotations := $localMetadata.service.annotations -}}
-{{- $localSharedLabels := $localMetadata.shared.labels -}}
-{{- $localObjectLabels := $localMetadata.service.labels -}}
-{{- if $service.monitoring.enable }}
+  {{- $globalMetadata := .Values.global.metadata -}}
+  {{- $globalSharedLabels := $globalMetadata.shared.labels -}}
+  {{- $globalObjectLabels := $globalMetadata.serviceMonitor.labels }}
+  {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
+  {{- $globalObjectAnnotations := $globalMetadata.serviceMonitor.annotations }}
+  {{- $service := .Values.collector -}}
+  {{- $localMetadata := $service.metadata -}}
+  {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
+  {{- $localObjectAnnotations := $localMetadata.serviceMonitor.annotations -}}
+  {{- $localSharedLabels := $localMetadata.shared.labels -}}
+  {{- $localObjectLabels := $localMetadata.serviceMonitor.labels -}}
+  {{- if $service.monitoring.serviceMonitoring.enable }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
-  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
-  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-    {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-    {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
-    {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-    app: prometheus
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
+    {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+    {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+    {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
   name: {{.Values.global.name }}-{{ $localMetadata.name }}-monitor
-  namespace: {{ $service.monitoring.promNamespace }}
+  namespace: {{ $service.monitoring.serviceMonitoring.promNamespace }}
 spec:
   endpoints:
-  - port: {{ $service.monitoring.portName }}
+    - port: {{ $service.monitoring.serviceMonitoring.portName }}
   namespaceSelector:
     matchNames:
-    - {{ $localMetadata.namespace | default .Values.global.namespace }}
+      - {{ $localMetadata.namespace | default .Values.global.namespace }}
   selector:
     matchLabels:
-{{- toYaml $localMetadata.service.labels | nindent 6 }}
+  {{- toYaml $localMetadata.service.labels | nindent 6 }}
   {{- end}}

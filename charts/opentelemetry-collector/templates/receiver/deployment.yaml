@@ -20,19 +20,19 @@ metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-deployment
   namespace: {{ .Values.receiver.metadata.namespace |  default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
   annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
-{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
-{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   selector:
     matchLabels:
 {{- toYaml .Values.receiver.metadata.pod.labels | nindent 6 }}
 {{- if not .Values.receiver.specs.autoscaling.enable }}
-  replicas: {{ .Values.receiver.specs.autoscaling.defaultReplicaCount }}
+  replicas: {{ .Values.receiver.specs.autoscaling.defaultReplicaCount }} {{ .Values.receiver.specs.autoscaling.defaultReplicaCount }}
 {{- end }}
   {{- if .Values.global.rolloutStrategy }}
   strategy: {{ toYaml .Values.global.rolloutStrategy | nindent 4 }}
