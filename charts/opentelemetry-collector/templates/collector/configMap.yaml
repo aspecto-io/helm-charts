@@ -4,27 +4,27 @@
 {{- $globalObjectLabels := $globalMetadata.configMap.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.configMap.annotations }}
-{{- $localMetadata := .Values.sampling_collector.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.configMap.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.configMap.labels -}}
-{{- $localListenerIp := .Values.sampling_collector.specs.network.localListenerIp -}}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.sampling_collector.specs.volumes.serviceConfig.name }}
-  namespace: {{ .Values.sampling_collector.metadata.namespace | default .Values.global.namespace }}
+  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
+  namespace: {{ .Values.collector.metadata.namespace | default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
   annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
-{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
-{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 data:
-  {{ .Values.sampling_collector.specs.volumes.serviceConfig.fileName }}: |
+  {{ .Values.collector.specs.volumes.serviceConfig.fileName }}: |
     config_sources:
       aspecto:
         token: {{ required "A valid api token is required." .Values.global.aspecto.apiToken }}
@@ -33,7 +33,7 @@ data:
     receivers:
       otlp:
         protocols:
-    {{- range .Values.sampling_collector.specs.network.ports }}
+    {{- range .Values.collector.specs.network.ports }}
     {{- if eq .name "grpc"}}
           grpc:
             endpoint: {{ $localListenerIp }}:{{ .internalPort }}
@@ -56,13 +56,13 @@ data:
 
     exporters:
       otlphttp:
-        endpoint: {{ .Values.sampling_collector.specs.configuration.endpoint }}
-      {{- if .Values.sampling_collector.specs.configuration.log.enable }} 
+        endpoint: {{ .Values.collector.specs.configuration.endpoint }}
+      {{- if .Values.collector.specs.configuration.log.enable }}
       logging:
-        logLevel: {{ .Values.sampling_collector.specs.configuration.log.level }}
+        logLevel: {{ .Values.collector.specs.configuration.log.level }}
       {{- end }}
 
-    {{- range .Values.sampling_collector.specs.network.ports }}
+    {{- range .Values.collector.specs.network.ports }}
     {{- if eq .name "health-check"}}
     extensions:
       health_check:
@@ -76,7 +76,7 @@ data:
         traces:
           receivers: [otlp]
           processors: [tail_sampling, resource]
-          {{- if .Values.sampling_collector.specs.configuration.log.enable }}
+          {{- if .Values.collector.specs.configuration.log.enable }}
           exporters: [otlphttp, logging]
           {{ else }}
           exporters: [otlphttp]

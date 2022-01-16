@@ -5,7 +5,7 @@
 {{- $globalObjectLabels := $globalMetadata.deployment.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.deployment.annotations }}
-{{- $localMetadata := .Values.load_balancer.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.deployment.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
@@ -18,21 +18,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-deployment
-  namespace: {{ .Values.load_balancer.metadata.namespace |  default .Values.global.namespace }}
+  namespace: {{ .Values.collector.metadata.namespace |  default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
   annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
-{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
-{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   selector:
     matchLabels:
-{{- toYaml .Values.load_balancer.metadata.pod.labels | nindent 6 }}
-{{- if not .Values.load_balancer.specs.autoscaling.enable }}
-  replicas: {{ .Values.load_balancer.specs.autoscaling.defaultReplicaCount }} {{ .Values.load_balancer.specs.autoscaling.defaultReplicaCount }}
+{{- toYaml .Values.collector.metadata.pod.labels | nindent 6 }}
+{{- if not .Values.collector.specs.autoscaling.enable }}
+  replicas: {{ .Values.collector.specs.autoscaling.defaultReplicaCount }}
 {{- end }}
   {{- if .Values.global.rolloutStrategy }}
   strategy: {{ toYaml .Values.global.rolloutStrategy | nindent 4 }}
@@ -49,43 +49,43 @@ spec:
     {{- if $localSubAnnotations }}{{ toYaml $localSubAnnotations | nindent 8 }}{{- end }}
     spec:
       volumes:
-        - name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.load_balancer.specs.volumes.serviceConfig.name }}
-          configMap:
-            name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.load_balancer.specs.volumes.serviceConfig.name }}
+        - name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
+          configMap: 
+            name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
       containers:
-        - name: "{{ .Values.global.name }}-{{ .Values.load_balancer.metadata.name }}"
-          image: "{{ .Values.load_balancer.image.repository | default .Values.global.image.repository }}/{{ .Values.load_balancer.image.name | default .Values.global.image.name }}:{{ .Values.load_balancer.image.version | default .Values.global.image.version }}"
-          imagePullPolicy: {{ .Values.load_balancer.image.policy | default .Values.global.image.pullPolicy }}
-          command: ["/otelcol-loadbalancing","--config","/config/loadbalancing-config.yml"]
+        - name: "{{ .Values.global.name }}-{{ .Values.collector.metadata.name }}"
+          image: "{{ .Values.collector.image.repository | default .Values.global.image.repository }}/{{ .Values.collector.image.name | default .Values.global.image.name }}:{{ .Values.collector.image.version | default .Values.global.image.version }}"
+          imagePullPolicy: {{ .Values.collector.image.policy | default .Values.global.image.pullPolicy }}
+          command: ["/otelcol-sampling","--config","{{ .Values.collector.specs.volumes.serviceConfig.mountPath }}/{{ .Values.collector.specs.volumes.serviceConfig.fileName }}"]
           volumeMounts:
-            - name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.load_balancer.specs.volumes.serviceConfig.name }}
-              mountPath: {{ .Values.load_balancer.specs.volumes.serviceConfig.mountPath | quote }}
-          {{- range .Values.load_balancer.specs.volumes.extraVolumes }}
+            - name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
+              mountPath: {{ .Values.collector.specs.volumes.serviceConfig.mountPath | quote}}
+          {{- range .Values.collector.specs.volumes.extraVolumes }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
               subPath: {{ .subPath }}
           {{- end }}
-          {{- range .Values.load_balancer.specs.volumes.extraSecretMounts }}
+          {{- range .Values.collector.specs.volumes.extraSecretMounts }}
             - name: {{ .name }}
               mountPath: {{ .mountPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
-          {{- if .Values.load_balancer.env }}
+          {{- if .Values.collector.env }}
           env:
-          {{- range $key, $value := .Values.load_balancer.env }}
+          {{- range $key, $value := .Values.collector.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
           {{- end }}
           {{- end }}
           ports:
-          {{- range .Values.load_balancer.specs.network.ports }}
+          {{- range .Values.collector.specs.network.ports }}
             - containerPort: {{ .internalPort }}
               type: {{ .type }}
               name: {{ .name  }}
               protocol: {{ .protocol }}
           {{- end }}
-          {{- if .Values.load_balancer.specs.probe }}
-{{ toYaml .Values.load_balancer.specs.probe | trim | indent 10 }}
+          {{- if .Values.collector.specs.probe }}
+{{ toYaml .Values.collector.specs.probe | trim | indent 10}}
           {{- end }}
-          resources: 
-{{ toYaml .Values.load_balancer.specs.resources | trim | indent 12 }}
+          resources:
+{{ toYaml .Values.collector.specs.resources | trim | indent 12 }}

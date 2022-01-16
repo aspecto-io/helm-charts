@@ -1,24 +1,24 @@
-name: aspecto-otel-load-balancer-deployment
-name: aspecto-otel-load-balancer-hpa
-name: aspecto-otel-load-balancer-loadBalancer-service
-name: aspecto-otel-load-balancer-service-configuration
-name: aspecto-otel-sampling-collector-deployment
-name: aspecto-otel-sampling-collector-hpa
-name: aspecto-otel-sampling-collector-service-configuration
-name: aspecto-otel-sampling-collector-tail-sampling-service
+name: aspecto-otel-receiver-deployment
+name: aspecto-otel-receiver-hpa
+name: aspecto-otel-receiver-loadBalancer-service
+name: aspecto-otel-receiver-service-configuration
+name: aspecto-otel-collector-deployment
+name: aspecto-otel-collector-hpa
+name: aspecto-otel-collector-service-configuration
+name: aspecto-otel-collector-tail-sampling-service
 
-suite: test load-balancer deployment
+suite: test receiver deployment
 templates:
-  - load-balancer/deployment.yaml
-  - load-balancer/configMap.yaml
-  - load-balancer/service.yaml
-  - load-balancer/hpa.yaml
-  - load-balancer/virtualService.yaml
-  - load-balancer/destinationRule.yaml
-  - load-balancer/gateway.yaml
+  - receiver/deployment.yaml
+  - receiver/configMap.yaml
+  - receiver/service.yaml
+  - receiver/hpa.yaml
+  - receiver/virtualService.yaml
+  - receiver/destinationRule.yaml
+  - receiver/gateway.yaml
 tests:
-  - it: load-balancer-deployment
-    template: load-balancer/deployment.yaml
+  - it: receiver-deployment
+    template: receiver/deployment.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
@@ -27,12 +27,12 @@ tests:
           of: Deployment
       - equal: 
           path: metadata.name
-          value: otel-collector-load-balancer-deployment
+          value: otel-collector-receiver-deployment
       - matchRegex:
           path: spec.template.spec.containers[0].image
           pattern: .*otelcol-loadbalancing:latest
-  - it: load-balancer-service/virtualService.yaml
-    template: load-balancer/service.yaml
+  - it: receiver-service/virtualService.yaml
+    template: receiver/service.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
@@ -42,46 +42,46 @@ tests:
       - equal:
           path: spec.type
           value: LoadBalancer
-  - it: load-balancer-hpa
-    template: load-balancer/hpa.yaml
+  - it: receiver-hpa
+    template: receiver/hpa.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
     set:
-      load_balancer.specs.autoscaling.enable: true
+      receiver.specs.autoscaling.enable: true
     asserts:
       - isKind:
           of: HorizontalPodAutoscaler
-  - it: load-balancer-virtualService
-    template: load-balancer/virtualService.yaml
+  - it: receiver-virtualService
+    template: receiver/virtualService.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
     set:
-      load_balancer.specs.network.istio.enabled: true
+      receiver.specs.network.istio.enabled: true
     asserts:
       - isKind:
           of: VirtualService
       - isAPIVersion:
           of: networking.istio.io/v1
-  - it: load-balancer-destinationRule
-    template: load-balancer/destinationRule.yaml
+  - it: receiver-destinationRule
+    template: receiver/destinationRule.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
     set:
-      load_balancer.specs.network.istio.enabled: true
-      load_balancer.specs.services.[0].serviceType: LoadBalancer
+      receiver.specs.network.istio.enabled: true
+      receiver.specs.services.[0].serviceType: LoadBalancer
     asserts:
       - isKind:
           of: DestinationRule
-  - it: load-balancer-gateway
-    template: load-balancer/gateway.yaml
+  - it: receiver-gateway
+    template: receiver/gateway.yaml
     values:
       - ../values.yaml
       - tests_values.yaml
     set:
-      load_balancer.specs.network.istio.enabled: true
+      receiver.specs.network.istio.enabled: true
     asserts:
       - isKind:
           of: Gateway

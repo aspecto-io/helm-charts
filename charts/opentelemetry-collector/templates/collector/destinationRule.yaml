@@ -4,14 +4,14 @@
 {{- $globalObjectLabels := $globalMetadata.destinationRule.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.destinationRule.annotations }}
-{{- $localMetadata := .Values.sampling_collector.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.destinationRule.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.destinationRule.labels -}}
-{{- $localListenerIp := .Values.sampling_collector.specs.network.localListenerIp -}}
-{{- if .Values.sampling_collector.specs.network.istio.enabled }}
-{{- range .Values.sampling_collector.specs.services }}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+{{- if .Values.collector.specs.network.istio.enabled }}
+{{- range .Values.collector.specs.services }}
 {{- if eq .serviceType "LoadBalancer" }}
 ---
 apiVersion: networking.istio.io/v1beta1
@@ -19,13 +19,13 @@ kind: DestinationRule
 metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-{{ .name }}-balancer
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
   annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
-{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
-{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   host: {{ .name }}
   trafficPolicy:

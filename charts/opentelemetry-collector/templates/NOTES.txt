@@ -1,14 +1,16 @@
 {{- $root := . }}
 
 Thank you for installing {{ .Chart.Name }}
-The colletor is running with version "{{ .Values.sampling_collector.image.repository | default .Values.global.image.repository }}/{{ .Values.sampling_collector.image.name | default .Values.global.image.name }}:{{ .Values.sampling_collector.image.version | default .Values.global.image.version }}"
+The collector is running with version "{{ .Values.collector.image.repository | default .Values.global.image.repository }}/{{ .Values.collector.image.name | default .Values.global.image.name }}:{{ .Values.collector.image.version | default .Values.global.image.version }}"
 
 The endpoint for you to set in the sdk configuration is: 
-{{- range .Values.load_balancer.specs.services }}
+{{- range .Values.receiver.specs.services }}
 {{- if eq .serviceType "LoadBalancer"}}
 please run:
-    `kubectl get service {{ $root.Values.global.name }}-{{ .name }}-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+    {{- with ( first $root.Values.receiver.specs.services ) }}
+    `kubectl get service {{ $root.Values.global.name }}-{{ $root.Values.receiver.metadata.name }}-{{ .name }}-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
+    {{- end }}
 {{- else if eq .serviceType "ClusterIP"}}
-    {{ $root.Values.global.name }}-{{ .name }}-service.{{ $root.Values.global.namespace }}.svc
+    {{ $root.Values.global.name }}-{{ .name }}-service.{{ $root.Values.receiver.metadata.namespace | default $root.Values.global.namespace }}.svc
 {{- end }}
 {{- end }}

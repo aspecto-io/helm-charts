@@ -4,24 +4,24 @@
 {{- $globalObjectLabels := $globalMetadata.gateway.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.gateway.annotations }}
-{{- $localMetadata := .Values.load_balancer.metadata -}}
+{{- $localMetadata := .Values.receiver.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.gateway.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.gateway.labels -}}
-{{- if .Values.load_balancer.specs.network.istio.enabled }}
+{{- if .Values.receiver.specs.network.istio.enabled }}
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
   name: grpc-{{ .Values.global.name }}-{{ $localMetadata.name }}-gateway
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
   annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
-{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
-{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   selector:
     istio: ingressgateway
@@ -31,5 +31,5 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - {{ .Values.load_balancer.specs.configuration.endpoint }}
+    - {{ .Values.receiver.specs.configuration.endpoint }}
 {{- end }}

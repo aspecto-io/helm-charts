@@ -1,0 +1,8 @@
+global:
+  aspecto:
+    apiToken: "adas1231242"
+
+load_balancer:
+  specs:
+    services:
+      serviceType: ClusterIP

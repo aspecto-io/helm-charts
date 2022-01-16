@@ -3,34 +3,35 @@
 {{- $globalObjectLabels := $globalMetadata.hpa.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.hpa.annotations }}
-{{- $localMetadata := .Values.load_balancer.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.hpa.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.hpa.labels -}}
-{{- if .Values.load_balancer.specs.autoscaling.enable }}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+{{- if .Values.collector.specs.autoscaling.enable }}
 apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ .Values.global.name }}-{{ $localMetadata.name }}-hpa
-  namespace: {{ .Values.sampling_collector.metadata.namespace | default .Values.global.namespace }}
+  namespace: {{ .Values.collector.metadata.namespace | default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
   annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
-{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
-{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ .Values.global.name }}-{{ $localMetadata.name }}-deployment
-  minReplicas: {{ .Values.load_balancer.specs.autoscaling.minReplicas }} 
-  maxReplicas: {{ .Values.load_balancer.specs.autoscaling.maxReplicas }} 
+  minReplicas: {{ .Values.collector.specs.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.collector.specs.autoscaling.maxReplicas }}
   metrics:
-  {{- with .Values.load_balancer.specs.autoscaling.targetMemoryUtilizationPercentage }}
+  {{- with .Values.collector.specs.autoscaling.targetMemoryUtilizationPercentage }}
   - type: Resource
     resource:
       name: memory
@@ -38,7 +39,7 @@ spec:
         type: Utilization
         averageUtilization: {{ . }}
   {{- end }}
-  {{- with .Values.load_balancer.specs.autoscaling.targetCPUUtilizationPercentage }}
+  {{- with .Values.collector.specs.autoscaling.targetCPUUtilizationPercentage }}
   - type: Resource
     resource:
       name: cpu

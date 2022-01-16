@@ -4,31 +4,32 @@
 {{- $globalObjectLabels := $globalMetadata.virtualService.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.virtualService.annotations }}
-{{- $localMetadata := .Values.load_balancer.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.virtualService.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.virtualService.labels -}}
-{{- if .Values.load_balancer.specs.network.istio.enabled }}
-{{- range .Values.load_balancer.specs.network.istio.rules }}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+{{- if .Values.collector.specs.network.istio.enabled }}
+{{- range .Values.collector.specs.network.istio.rules }}
 
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-{{ .name }}-vsvc
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-{{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-{{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
   annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
-{{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-{{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
-{{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   hosts:
   {{ toYaml .hostHeader | trim | indent 4 }}
   gateways:
-    - grpc-{{ $localMetadata.namespace | default $root.Values.namespace }}-{{ $localMetadata.name | default $root.Values.name }}-gateway
+  - grpc-{{ $localMetadata.namespace | default $root.Values.namespace }}-{{ $localMetadata.name | default $root.Values.name }}-gateway
   http:
   {{- range .ingress }}
     - match:
@@ -36,7 +37,7 @@ spec:
           prefix: {{ .uriPrefix }}
       route:
       - destination:
-          host: {{ tpl ( .host ) $ }}
+          host: {{ $root.Values.collector.specs.network.serviceName }}
           port:
             number: {{ .destinationPort }}
   {{- end }}
