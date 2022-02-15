@@ -36,7 +36,7 @@ ___
 # How to install
 1. add the aspecto.io help repo by running:
 ```bash
-helm repo add aspecto https://aspecto.github.io/helm-charts
+console helm repo add aspecto https://aspecto.github.io/opentelemetry-helm-charts
 ```
 
 2. go to https://app.aspecto.io/app/integration/api-key and copy your api key 
@@ -94,7 +94,7 @@ _This section of parameters will be shared across all objects unless specified p
 | global.image.`version` | Global image to pull (we're using the same tag when new version is release and tested) | string | specified to latest stable version| false |
 ___
 ## receiver
-_This section of parameters describes the load_balancer service_
+_This section of parameters describes the receiver service_
 | Name | Description | Type/Options | Default | Required |
 | :--- | :--- | :---: | :---: | :---: |
 | receiver.`env` | environment variables | object | {} | false | string | empty | `true` |
@@ -164,7 +164,7 @@ _This section of parameters describes the load_balancer service_
 | ***`receiver.specs.services`*** : _service configuration_ |
 | receiver.specs.service.[].`name` | Service name | string | opentelemetry-sampling-receiver | `true` |
 | receiver.specs.service.[].`serviceType` | Service type | `LoadBalancer`, `ClusterIP` | LoadBalancer | `true` |
-| receiver.specs.service.[].`selector` | key:value of pod labels | {} | component: otel-collector-receiver-pod | `true` |
+| receiver.specs.service.[].`selector` | key:value of pod labels | {} | component: otel-receiver-pod | `true` |
 | receiver.specs.service.[].`ports` | service exposed ports | [] | (default configuration provided) | `true` |
 | receiver.specs.service.[].ports.[].`name` | port name | string | grpc | `true` |
 | receiver.specs.service.[].ports.[].`type` | port type | string | grpc | `true` |
@@ -174,7 +174,7 @@ _This section of parameters describes the load_balancer service_
 | receiver.specs.service.[].ports.[].`loadBalancer` | routing mechanism | object | simple: LEAST_CONN | `true` |
 ___
 ## collector
-_This section of parameters describes the  sampling_collector service_
+_This section of parameters describes the  collector service_
 | Name | Description | Type/Options | Default | Required |
 | :--- | :--- | :---: | :---: | :---: |
 | collector.`env` | environment variables | object | {} | false | string | empty | `true` |
@@ -244,7 +244,7 @@ _This section of parameters describes the  sampling_collector service_
 | ***` collector.specs.services`*** : _service configuration_ |
 | collector.specs.service.[].`name` | Service name | string | opentelemetry-sampling | `true` |
 | collector.specs.service.[].`serviceType` | Service type | `LoadBalancer`, `ClusterIP` | ClusterIP | `true` |
-| collector.specs.service.[].`selector` | key:value of pod labels | {} | component: otel-collector-receiver-pod | `true` |
+| collector.specs.service.[].`selector` | key:value of pod labels | {} | component: otel-receiver-pod | `true` |
 | collector.specs.service.[].`ports` | service exposed ports | [] | (default configuration provided) | `true` |
 | collector.specs.service.[].ports.[].`name` | port name | string | grpc | `true` |
 | collector.specs.service.[].ports.[].`type` | port type | string | grpc | `true` |

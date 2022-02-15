@@ -9,6 +9,7 @@
 {{- $localObjectAnnotations := $localMetadata.configMap.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.configMap.labels -}}
+{{- $localListenerIp := .Values.receiver.specs.network.localListenerIp -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -18,7 +19,7 @@ metadata:
   {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
   {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
   {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-  annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
+  annotations: {{- if $globalSharedAnnotations }}{{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}{{- end}}
   {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
   {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
@@ -28,14 +29,37 @@ data:
       otlp:
         protocols:
     {{- range .Values.receiver.specs.network.ports }}
-    {{- if eq .name "grpc"}}
+      {{- if eq .name "grpc"}}
           grpc:
-            endpoint: {{ $root.Values.receiver.specs.network.localListenerIp }}:{{ .internalPort }}
-    {{- end}}
-    {{- if eq .name "http"}}
+            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+            max_recv_msg_size_mib: 1234123412341234123
+      {{- end}}
+      {{- if eq .name "http"}}
           http:
-            endpoint: {{ $root.Values.receiver.specs.network.localListenerIp }}:{{ .internalPort }}
+            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+      {{- end}}
     {{- end}}
+    {{- if .Values.receiver.specs.jeager_collector.enable }}
+      jaeger:
+        protocols:
+      {{- range .Values.receiver.specs.network.ports }}
+        {{- if eq .name "jaeger-grpc"}}
+          grpc:
+            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+        {{- end}}
+        {{- if eq .name "jaeger-http"}}
+          thrift_http:
+            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+        {{- end}}
+      {{- end}}
+    {{- end}}
+    {{- if .Values.receiver.specs.zipkin_collector.enable }}
+      zipkin:
+      {{- range .Values.receiver.specs.network.ports }}
+        {{- if eq .name "zipkin"}}
+        endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+        {{- end}}
+      {{- end}}
     {{- end}}
 
     exporters:
@@ -47,22 +71,16 @@ data:
               insecure: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.otlp.tls.insecure }}
         resolver:
           dns:
-            {{- with ( first $root.Values.collector.specs.services ) }}
-            {{- if eq .serviceType "ClusterIP" }}
-            hostname: {{ $root.Values.global.name }}-{{ $root.Values.collector.metadata.name }}-{{ .name }}-service.{{ $root.Values.collector.metadata.namespace |  default $root.Values.global.namespace }}
-            {{ else }}
-            hostname: {{ required "Missing configuration of receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname" $root.Values.receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname }}
-            {{- end }}
-            {{- end }}
+            hostname: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname }}
             port: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.port }}
 
     {{- range .Values.receiver.specs.network.ports }}
-    {{- if eq .name "health-check"}}
+      {{- if eq .name "health-check"}}
     extensions:
       health_check:
-        endpoint: "{{ $root.Values.receiver.specs.network.localListenerIp }}:{{ .internalPort }}"
-    {{- end}}
-    {{- end}}
+        endpoint: "{{ $localListenerIp }}:{{ .internalPort }}"
+      {{- end }}
+    {{- end }}
 
     service:
       extensions: [health_check]
@@ -70,5 +88,12 @@ data:
         traces:
           receivers:
             - otlp
+    {{- if .Values.receiver.specs.jeager_collector.enable }}
+            - jaeger
+    {{- end }}
+    {{- if .Values.receiver.specs.zipkin_collector.enable }}
+            - zipkin
+    {{- end }}
           processors: []
-          exporters: [loadbalancing]
+          exporters:
+            - loadbalancing

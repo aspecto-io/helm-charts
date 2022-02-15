@@ -13,8 +13,7 @@ global:
     type: RollingUpdate
   metadata:
     shared:
-      annotations:
-        helm/deploymentTimestamp: "{{ now | unixEpoch }}"
+      annotations: {}
       labels:
         app: opentelemetry
         receiverVersion: "{{ .Values.receiver.image.version | default .Values.global.image.version }}"
@@ -57,7 +56,7 @@ global:
   image:
     repository: 'public.ecr.aws/x3s3n8k7'
     pullPolicy: Always
-    version: 'v0.0.2'
+    version: 'v0.0.3'
 
 receiver:
   image:
@@ -118,6 +117,10 @@ receiver:
         # - port: prometheus
 
   specs:
+    jeager_collector:
+      enable: true
+    zipkin_collector:
+      enable: false
     configuration:
       exporters:
         load_balancing:
@@ -129,11 +132,11 @@ receiver:
             resolver:
               dns:
                 hostname:
-                port: 4137
+                port: 4317
       log:
         enable: true
         level: debug
-      endpoint: ''
+      endpoint: 'aspecto-testing-gateway'
 
     autoscaling:
       enable: true
@@ -209,17 +212,56 @@ receiver:
           internalPort: 9411
           externalPort: 9411
           protocol: TCP
+        - name: jaeger-grpc
+          internalPort: 14250
+          externalPort: 14250
+          protocol: TCP
+        - name: jaeger-http
+          internalPort: 14268
+          externalPort: 14268
+          protocol: TCP
 
       istio:
-        enabled: false
+        enabled: true
+        destinationRuleName: aspecto-otel-receiver-load-balancer-detinationRule
+        defaultHostHeader:
+          - aspecto-otel-receiver-load-balancer-destinationrule
         rules:
-        - name: 'port-9000-uri-root'
+        - name: 'grpc'
           ingress:
             - uriPrefix: "/"
-              host: "{{ .Values.global.loadBalancerEndpoint }}"
+              destinationPort: 4317
+          hostHeader:
+        - name: 'http'
+          ingress:
+            - uriPrefix: "/"
+              destinationPort: 4318
+          hostHeader:
+        - name: 'health-check'
+          ingress:
+            - uriPrefix: "/"
               destinationPort: 8090
           hostHeader:
-            - '*'
+        - name: 'metrics'
+          ingress:
+            - uriPrefix: "/"
+              destinationPort: 8888
+          hostHeader:
+        - name: 'zipkin'
+          ingress:
+            - uriPrefix: "/"
+              destinationPort: 9411
+          hostHeader:
+        - name: 'jaeger-grpc'
+          ingress:
+            - uriPrefix: "/"
+              destinationPort: 14250
+          hostHeader:
+        - name: 'jaeger-http'
+          ingress:
+            - uriPrefix: "/"
+              destinationPort: 14268
+          hostHeader:
 
     services:
       - name: load-balancer
@@ -278,6 +320,20 @@ receiver:
             type: http
             externalPort: 9411
             internalPort: 9411
+            protocol: TCP
+            loadBalancer:
+              simple: LEAST_CONN
+          - name: jaeger-grpc
+            type: TCP
+            externalPort: 14250
+            internalPort: 14250
+            protocol: TCP
+            loadBalancer:
+              simple: LEAST_CONN
+          - name: jaeger-http
+            type: http
+            externalPort: 14268
+            internalPort: 14268
             protocol: TCP
             loadBalancer:
               simple: LEAST_CONN
@@ -341,6 +397,8 @@ collector:
       # - port: prometheus
 
   specs:
+    jeager_collector: true
+    zipkin_collector: false
     configuration:
       endpoint: https://collector.aspecto.io
       decision_wait: 10s
@@ -426,17 +484,56 @@ collector:
           internalPort: 9411
           externalPort: 9411
           protocol: TCP
+        - name: jaeger-grpc
+          internalPort: 14250
+          externalPort: 14250
+          protocol: TCP
+        - name: jaeger-http
+          internalPort: 14268
+          externalPort: 14268
+          protocol: TCP
 
       istio:
         enabled: false
+        destinationRuleName: aspecto-otel-collector-tail-sampling-detinationRule
+        defaultHostHeader:
+          - aspecto-otel-collector-load-balancer-destinationrule
         rules:
-          - name: 'port-9000-uri-root'
+          - name: 'grpc'
             ingress:
               - uriPrefix: "/"
-                host: "{{ .Values.global.loadBalancerEndpoint }}"
                 destinationPort: 4317
             hostHeader:
-              - '*'
+          - name: 'http'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 4318
+            hostHeader:
+          - name: 'health-check'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 8090
+            hostHeader:
+          - name: 'metrics'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 8888
+            hostHeader:
+          - name: 'zipkin'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 9411
+            hostHeader:
+          - name: 'jaeger-grpc'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 14250
+            hostHeader:
+          - name: 'jaeger-http'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 14268
+            hostHeader:
 
     services:
       - name: tail-sampling
@@ -458,7 +555,7 @@ collector:
         ports:
           - name: grpc            # Name of the port (Should match one of the ports in the containers)
             type: grpc            # The Type of the port the service is exposing. The valid options are <http/http2/grpc/mongo/redis/tcp/tls/udp>
-            externalPort: 8081    # Port the service exposes
+            externalPort: 4317    # Port the service exposes
             internalPort: 4317    # Port the service accesses when redirecting to the pod
             protocol: TCP
             selector:
@@ -467,7 +564,7 @@ collector:
               simple: LEAST_CONN
           - name: http
             type: http
-            externalPort: 8082
+            externalPort: 4318
             internalPort: 4318
             protocol: TCP
             selector:
@@ -476,21 +573,21 @@ collector:
               simple: LEAST_CONN  # We support only simple load balancing algorithms. the valid options are <ROUND_ROBIN/LEAST_CONN/RANDOM>
           - name: zipkin
             type: http
-            externalPort: 8085
+            externalPort: 9411
             internalPort: 9411
             protocol: TCP
             loadBalancer:
               simple: LEAST_CONN
           - name: health-check
             type: http
-            externalPort: 8083
+            externalPort: 8090
             internalPort: 8090
             protocol: TCP
             loadBalancer:
               simple: LEAST_CONN
           - name: metrics
             type: http
-            externalPort: 8084
+            externalPort: 8888
             internalPort: 8888
             protocol: TCP
             loadBalancer:
@@ -499,6 +596,20 @@ collector:
             type: http
             externalPort: 9090
             internalPort: 9090
+            protocol: TCP
+            loadBalancer:
+              simple: LEAST_CONN
+          - name: jaeger-grpc
+            type: TCP
+            externalPort: 14250
+            internalPort: 14250
+            protocol: TCP
+            loadBalancer:
+              simple: LEAST_CONN
+          - name: jaeger-http
+            type: http
+            externalPort: 14268
+            internalPort: 14268
             protocol: TCP
             loadBalancer:
               simple: LEAST_CONN

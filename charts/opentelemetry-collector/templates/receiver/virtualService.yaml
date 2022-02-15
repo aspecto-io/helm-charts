@@ -9,10 +9,12 @@
 {{- $localObjectAnnotations := $localMetadata.virtualService.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.virtualService.labels -}}
+{{- $istio := .Values.receiver.specs.network.istio }}
+{{- $detinationRule := $istio.destinationRuleName }}
 {{- if .Values.receiver.specs.network.istio.enabled }}
 {{- range .Values.receiver.specs.network.istio.rules }}
 
-apiVersion: networking.istio.io/v1
+apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-{{ .name }}-vsvc
@@ -20,15 +22,18 @@ metadata:
   {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
   {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
   {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-  annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
+  annotations: {{- if $globalSharedAnnotations }}{{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}{{- end }}
   {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
   {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   hosts:
-  {{ toYaml .hostHeader | trim | indent 4 }}
+  {{ toYaml $istio.defaultHostHeader | trim | indent 2 }}
+  {{- if .hostHeader }}
+    {{ toYaml .hostHeader | trim | indent 2 }}
+  {{- end }}
   gateways:
-    - grpc-{{ $localMetadata.namespace | default $root.Values.namespace }}-{{ $localMetadata.name | default $root.Values.name }}-gateway
+    - {{ $root.Values.global.name }}-{{ $localMetadata.name }}-gateway
   http:
   {{- range .ingress }}
     - match:
@@ -36,7 +41,7 @@ spec:
           prefix: {{ .uriPrefix }}
       route:
       - destination:
-          host: {{ tpl ( .host ) $ }}
+          host: {{ $detinationRule }}
           port:
             number: {{ .destinationPort }}
   {{- end }}
