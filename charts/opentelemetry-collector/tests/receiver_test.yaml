@@ -27,7 +27,7 @@ tests:
           of: Deployment
       - equal: 
           path: metadata.name
-          value: otel-collector-receiver-deployment
+          value: otel-test-receiver-deployment
       - matchRegex:
           path: spec.template.spec.containers[0].image
           pattern: .*otelcol-loadbalancing:latest
@@ -63,7 +63,7 @@ tests:
       - isKind:
           of: VirtualService
       - isAPIVersion:
-          of: networking.istio.io/v1
+          of: networking.istio.io/v1alpha3
   - it: receiver-destinationRule
     template: receiver/destinationRule.yaml
     values:

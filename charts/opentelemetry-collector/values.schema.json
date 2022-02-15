@@ -218,7 +218,7 @@
                 }
             }
         },
-        "load_balancer": {
+        "receiver": {
             "type": "object",
             "properties": {
                 "image": {
@@ -424,7 +424,7 @@
                                                         },
                                                         "port": {
                                                             "type": "number",
-                                                            "default": 4137,
+                                                            "default": 4317,
                                                             "description": "sampling service grpc port number"
                                                         }
                                                     }
@@ -792,7 +792,7 @@
                 }
             }
         },
-        "sampling_collector": {
+        "collector": {
             "type": "object",
             "properties": {
                 "image": {
@@ -945,6 +945,36 @@
                                 "labels": {
                                     "type": "object",
                                     "description": "pod labels",
+                                    "default": {}
+                                }
+                            }
+                        },
+                        "serviceMonitor": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "type": "object",
+                                    "description": "serviceMonitor annotations to allow monitoring using Prometheus",
+                                    "default": {}
+                                },
+                                "labels": {
+                                    "type": "object",
+                                    "description": "serviceMonitor labels",
+                                    "default": {}
+                                }
+                            }
+                        },
+                        "podMonitor": {
+                            "type": "object",
+                            "properties": {
+                                "annotations": {
+                                    "type": "object",
+                                    "description": "podMonitor annotations to allow monitoring using Prometheus",
+                                    "default": {}
+                                },
+                                "labels": {
+                                    "type": "object",
+                                    "description": "podMonitor labels",
                                     "default": {}
                                 }
                             }

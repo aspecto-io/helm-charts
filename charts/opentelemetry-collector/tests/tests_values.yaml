@@ -1,5 +1,5 @@
 global:
-  name: otel-collector
+  name: otel-test
   namespace: testing
   aspecto:
     apiToken: 'test-api-token'

@@ -18,7 +18,7 @@ metadata:
   {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
   {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
   {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
-  annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}
+  annotations: {{- if $globalSharedAnnotations }}{{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}{{- end}}
   {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
   {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
