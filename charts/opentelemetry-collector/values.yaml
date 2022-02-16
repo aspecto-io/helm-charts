@@ -342,7 +342,7 @@ receiver:
             protocol: TCP
             loadBalancer:
               simple:
-
+              
 collector:
   image:
     repository: ''
@@ -510,6 +510,9 @@ collector:
               tcpKeepalive:
                 time: 7200s
                 interval: 75s
+
+        defaultHostHeader:
+          - aspecto-otel-collector-load-balancer-destinationrule
         rules:
           - name: 'grpc'
             ingress:
@@ -615,6 +618,7 @@ collector:
             protocol: TCP
             loadBalancer:
               simple:
+              
           - name: jaeger-grpc
             type: TCP
             externalPort: 14250
@@ -622,6 +626,7 @@ collector:
             protocol: TCP
             loadBalancer:
               simple:
+              
           - name: jaeger-http
             type: http
             externalPort: 14268

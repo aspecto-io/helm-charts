@@ -14,6 +14,7 @@
 {{- if .Values.collector.specs.network.istio.enabled }}
 {{- range .Values.collector.specs.network.istio.rules }}
 {{- $rule := . }}
+
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -32,7 +33,7 @@ spec:
   gateways:
     - {{ $root.Values.global.name }}-{{ $localMetadata.name }}-gateway
   http:
-  {{- range .ingress }}
+    {{- range .ingress }}
     - match:
         - uri:
             prefix: {{ .uriPrefix }}
