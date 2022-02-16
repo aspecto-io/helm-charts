@@ -13,7 +13,8 @@ global:
     type: RollingUpdate
   metadata:
     shared:
-      annotations: {}
+      annotations:
+        imageProvidor: 'aspecto.io'
       labels:
         app: opentelemetry
         receiverVersion: "{{ .Values.receiver.image.version | default .Values.global.image.version }}"

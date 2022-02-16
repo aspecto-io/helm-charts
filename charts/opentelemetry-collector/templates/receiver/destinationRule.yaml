@@ -13,7 +13,7 @@
 {{- if .Values.receiver.specs.network.istio.enabled }}
 {{- $host := .Values.receiver.specs.network.istio.defaultHostHeader -}}
 {{- range .Values.receiver.specs.services }}
-{{ $desinationRuleName := printf "%s-%s-%s-detinationRule" $root.Values.global.name $localMetadata.name .name }}
+{{ $desinationRuleName := printf "%s-%s-%s-detinationRule" $root.Values.global.name $localMetadata.name .name | lower }}
 {{ $rule := . }}
 
 ---
