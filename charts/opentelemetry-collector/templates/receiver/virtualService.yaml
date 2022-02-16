@@ -13,7 +13,7 @@
 {{- $detinationRule := $istio.destinationRuleName }}
 {{- if .Values.receiver.specs.network.istio.enabled }}
 {{- range .Values.receiver.specs.network.istio.rules }}
-
+{{- $rule := . }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -28,10 +28,7 @@ metadata:
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   hosts:
-  {{ toYaml $istio.defaultHostHeader | trim | indent 2 }}
-  {{- if .hostHeader }}
-    {{ toYaml .hostHeader | trim | indent 2 }}
-  {{- end }}
+    - {{ $rule.hostHeader | default $istio.defaultHostHeader }}
   gateways:
     - {{ $root.Values.global.name }}-{{ $localMetadata.name }}-gateway
   http:
@@ -41,9 +38,10 @@ spec:
           prefix: {{ .uriPrefix }}
       route:
       - destination:
-          host: {{ $detinationRule }}
+          host: {{ $rule.hostHeader | default $istio.defaultHostHeader }}
           port:
             number: {{ .destinationPort }}
   {{- end }}
 {{- end }}
+---
 {{- end }}

@@ -1,19 +1,19 @@
 {{- $root := . -}}
-  {{- $globalMetadata := .Values.global.metadata -}}
-  {{- $globalSharedLabels := $globalMetadata.shared.labels -}}
-  {{- $globalObjectLabels := $globalMetadata.virtualService.labels }}
-  {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
-  {{- $globalObjectAnnotations := $globalMetadata.virtualService.annotations }}
-  {{- $localMetadata := .Values.collector.metadata -}}
-  {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
-  {{- $localObjectAnnotations := $localMetadata.virtualService.annotations -}}
-  {{- $localSharedLabels := $localMetadata.shared.labels -}}
-  {{- $localObjectLabels := $localMetadata.virtualService.labels -}}
-  {{- $istio := .Values.collector.specs.network.istio }}
-  {{- $detinationRule := $istio.destinationRuleName }}
-  {{- if .Values.collector.specs.network.istio.enabled }}
-  {{- range .Values.collector.specs.network.istio.rules }}
-
+{{- $globalMetadata := .Values.global.metadata -}}
+{{- $globalSharedLabels := $globalMetadata.shared.labels -}}
+{{- $globalObjectLabels := $globalMetadata.virtualService.labels }}
+{{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
+{{- $globalObjectAnnotations := $globalMetadata.virtualService.annotations }}
+{{- $localMetadata := .Values.collector.metadata -}}
+{{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
+{{- $localObjectAnnotations := $localMetadata.virtualService.annotations -}}
+{{- $localSharedLabels := $localMetadata.shared.labels -}}
+{{- $localObjectLabels := $localMetadata.virtualService.labels -}}
+{{- $istio := .Values.collector.specs.network.istio }}
+{{- $detinationRule := $istio.destinationRuleName }}
+{{- if .Values.collector.specs.network.istio.enabled }}
+{{- range .Values.collector.specs.network.istio.rules }}
+{{- $rule := . }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -28,22 +28,20 @@ metadata:
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   hosts:
-  {{ toYaml $istio.defaultHostHeader | trim | indent 2 }}
-  {{- if .hostHeader }}
-  {{ toYaml .hostHeader | trim | indent 2 }}
-  {{- end }}
+    - {{ $rule.hostHeader | default $istio.defaultHostHeader }}
   gateways:
     - {{ $root.Values.global.name }}-{{ $localMetadata.name }}-gateway
   http:
-    {{- range .ingress }}
+  {{- range .ingress }}
     - match:
         - uri:
             prefix: {{ .uriPrefix }}
       route:
         - destination:
-            host: {{ $detinationRule }}
+            host: {{ $rule.hostHeader | default $istio.defaultHostHeader }}
             port:
               number: {{ .destinationPort }}
   {{- end }}
-  {{- end }}
-  {{- end }}
+{{- end }}
+---
+{{- end }}

@@ -31,5 +31,5 @@ spec:
       name: http
       protocol: HTTP
     hosts:
-    - {{ .Values.receiver.specs.configuration.endpoint }}
+    - {{ .Values.receiver.specs.network.istio.defaultHostHeader }}
 {{- end }}
