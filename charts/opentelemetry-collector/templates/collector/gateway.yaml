@@ -26,10 +26,10 @@ spec:
   selector:
     istio: ingressgateway
   servers:
-    - port:
-        number: 80
-        name: http
-        protocol: HTTP
-      hosts:
-        - {{ .Values.collector.specs.configuration.endpoint }}
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+      - {{ .Values.receiver.specs.network.istio.defaultHostHeader }}
   {{- end }}

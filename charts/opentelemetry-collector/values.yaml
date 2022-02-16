@@ -222,10 +222,12 @@ receiver:
           protocol: TCP
 
       istio:
-        enabled: true
+        enabled: false
         destinationRuleName: aspecto-otel-receiver-load-balancer-detinationRule
-        defaultHostHeader:
-          - aspecto-otel-receiver-load-balancer-destinationrule
+        defaultHostHeader: aspecto-otel-receiver-load-balancer.io
+        trafficPolicy:
+          loadBalancer:
+            simple: ROUND_ROBIN
         rules:
         - name: 'grpc'
           ingress:
@@ -276,6 +278,9 @@ receiver:
         # LoadBalancer - This is for when you need complex load balancing options. Based on user headers or specific uri prefixes.
         # This is also the only option that would utilize Istio (https://istio.io/).
         serviceType: LoadBalancer
+        loadBalancer:
+          simple: LEAST_CONN
+          host: aspecto-otel-receiver-load-balancer.io
 
         selector:
           component: otel-receiver-pod
@@ -287,57 +292,57 @@ receiver:
             externalPort: 4317  # Port the service exposes
             internalPort: 4317  # Port the service accesses when redirecting to the pod
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: http
             type: http
             externalPort: 4318
             internalPort: 4318
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: health-check
             type: http
             externalPort: 8090
             internalPort: 8090
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: metrics
             type: http
             externalPort: 8888
             internalPort: 8888
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: metrics-col
             type: http
             externalPort: 9090
             internalPort: 9090
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: zipkin
             type: http
             externalPort: 9411
             internalPort: 9411
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: jaeger-grpc
             type: TCP
             externalPort: 14250
             internalPort: 14250
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: jaeger-http
             type: http
             externalPort: 14268
             internalPort: 14268
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
-
+              simple:
+              
 collector:
   image:
     repository: ''
@@ -496,8 +501,15 @@ collector:
       istio:
         enabled: false
         destinationRuleName: aspecto-otel-collector-tail-sampling-detinationRule
-        defaultHostHeader:
-          - aspecto-otel-collector-load-balancer-destinationrule
+        defaultHostHeader: aspecto-otel-receiver-load-balancer.io
+        trafficPolicy:
+          connectionPool:
+            tcp:
+              maxConnections: 100
+              connectTimeout: 30ms
+              tcpKeepalive:
+                time: 7200s
+                interval: 75s
         rules:
           - name: 'grpc'
             ingress:
@@ -548,6 +560,9 @@ collector:
         # LoadBalancer - This is for when you need complex load balancing options. Based on user headers or specific uri prefixes.
         # This is also the only option that would utilize Istio (https://istio.io/).
         serviceType: ClusterIP
+        loadBalancer:
+          simple: LEAST_CONN
+          host: aspecto-otel-collector-load-balancer.io
 
         selector:
           component: otel-collector
@@ -561,7 +576,7 @@ collector:
             selector:
               component: collector
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: http
             type: http
             externalPort: 4318
@@ -570,46 +585,49 @@ collector:
             selector:
               component: collector
             loadBalancer:
-              simple: LEAST_CONN  # We support only simple load balancing algorithms. the valid options are <ROUND_ROBIN/LEAST_CONN/RANDOM>
+              # We support only simple load balancing algorithms. the valid options are <ROUND_ROBIN/LEAST_CONN/RANDOM>
+              simple:
           - name: zipkin
             type: http
             externalPort: 9411
             internalPort: 9411
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: health-check
             type: http
             externalPort: 8090
             internalPort: 8090
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: metrics
             type: http
             externalPort: 8888
             internalPort: 8888
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
           - name: metrics-col
             type: http
             externalPort: 9090
             internalPort: 9090
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
+              
           - name: jaeger-grpc
             type: TCP
             externalPort: 14250
             internalPort: 14250
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
+              
           - name: jaeger-http
             type: http
             externalPort: 14268
             internalPort: 14268
             protocol: TCP
             loadBalancer:
-              simple: LEAST_CONN
+              simple:
