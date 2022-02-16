@@ -39,8 +39,7 @@ spec:
       route:
       - destination:
           host: {{ $rule.hostHeader | default $istio.defaultHostHeader }}
-          port:
-            number: {{ .destinationPort }}
+          subnet: {{ $istio.subnetName }}
   {{- end }}
 {{- end }}
 ---

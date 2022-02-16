@@ -43,7 +43,7 @@ spec:
         {{- end }}
       {{- end }}
   subsets:
-    - name:
+    - name: {{ $root.Values.receiver.specs.network.istio.subnetName }}
       labels:
         app: {{ $globalSharedLabels.app }}
         receiverVersion: {{ $version }}
