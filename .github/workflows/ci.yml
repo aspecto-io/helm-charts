@@ -31,8 +31,8 @@ jobs:
             echo "::set-output name=changed::true"
           fi
 
-      - name: Run chart lint
-        run: ct lint --debug
+          #      - name: Run chart lint
+        #        run: ct lint --debug
 
       - name: Run chart unittest
         run: |
