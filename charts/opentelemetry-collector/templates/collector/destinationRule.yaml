@@ -41,7 +41,7 @@ spec:
         {{- end }}
       {{- end }}
   subsets:
-    - name:
+    - name: {{ $root.Values.collector.specs.network.istio.subnetName }}
       labels:
         app: {{ $globalSharedLabels.app }}
         collectorVersion: {{ $version }}

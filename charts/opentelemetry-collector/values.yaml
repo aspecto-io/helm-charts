@@ -225,6 +225,7 @@ receiver:
         enabled: false
         destinationRuleName: aspecto-otel-receiver-load-balancer-detinationRule
         defaultHostHeader: aspecto-otel-receiver-load-balancer.io
+        subnetName: receiver
         trafficPolicy:
           loadBalancer:
             simple: ROUND_ROBIN
@@ -502,6 +503,7 @@ collector:
         enabled: false
         destinationRuleName: aspecto-otel-collector-tail-sampling-detinationRule
         defaultHostHeader: aspecto-otel-receiver-load-balancer.io
+        subnetName: collector
         trafficPolicy:
           connectionPool:
             tcp:
