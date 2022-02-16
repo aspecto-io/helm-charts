@@ -40,7 +40,7 @@ spec:
       route:
         - destination:
             host: {{ $rule.hostHeader | default $istio.defaultHostHeader }}
-              subnet: {{ $istio.subnetName }}
+            subnet: {{ $istio.subnetName }}
   {{- end }}
 {{- end }}
 ---
