@@ -35,10 +35,8 @@ spec:
       {{- range .ports }}
       - port:
           number: {{ .internalPort }}
-        {{- if eq $rule.serviceType "LoadBalancer" }}
         loadBalancer:
           simple: {{ .loadBalancer.simple | default $rule.loadBalancer.simple }}
-        {{- end }}
       {{- end }}
   subsets:
     - name: {{ $root.Values.collector.specs.network.istio.subnetName }}
