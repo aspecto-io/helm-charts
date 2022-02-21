@@ -344,7 +344,6 @@ receiver:
             protocol: TCP
             loadBalancer:
               simple:
-              
 collector:
   image:
     repository: ''
@@ -618,7 +617,6 @@ collector:
             protocol: TCP
             loadBalancer:
               simple:
-              
           - name: jaeger-grpc
             type: TCP
             externalPort: 14250
@@ -626,7 +624,6 @@ collector:
             protocol: TCP
             loadBalancer:
               simple:
-              
           - name: jaeger-http
             type: http
             externalPort: 14268
