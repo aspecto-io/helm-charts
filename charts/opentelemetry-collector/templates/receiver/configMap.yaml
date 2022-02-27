@@ -26,6 +26,8 @@ metadata:
 data:
   {{ .Values.receiver.specs.volumes.serviceConfig.fileName }}: |
     receivers:
+      zipkin:
+        endpoint: 0.0.0.0:9411
       otlp:
         protocols:
     {{- range .Values.receiver.specs.network.ports }}

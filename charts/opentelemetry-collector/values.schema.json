@@ -178,6 +178,11 @@
                             "description": "api token for aspecto integration. for more information go here: https://app.aspecto.io/app/integration/api-key",
                             "default": null
                         },
+                        "environment": {
+                            "type": "string",
+                            "description": "the name of the environment",
+                            "default": null
+                        },
                         "interval": {
                             "type": "number",
                             "description": "refresh rate to validate token (in seconds)",

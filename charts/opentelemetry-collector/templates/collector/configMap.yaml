@@ -52,6 +52,12 @@ data:
           - key: aspecto.customer.prem
             value: true
             action: insert
+          - key: aspecto.token
+            value: {{ required "A valid api token is required." .Values.global.aspecto.apiToken }}
+            action: insert
+          - key: deployment.environment
+            value: {{ .Values.global.aspecto.environment }}
+            action: insert
 
     exporters:
       otlphttp:
