@@ -5,6 +5,7 @@ global:
   aspecto:
     existingSecret: false
     apiToken: ''
+    environment: ''
     interval: 60
   rolloutStrategy:
     rollingUpdate:
