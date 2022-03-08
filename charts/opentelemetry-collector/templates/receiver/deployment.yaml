@@ -70,12 +70,13 @@ spec:
               mountPath: {{ .mountPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
-          {{- if .Values.receiver.env }}
+          {{- if .Values.receiver.envs }}
           env:
-          {{- range $key, $value := .Values.receiver.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-          {{- end }}
+{{ toYaml .Values.receiver.envs | indent 10 }}
+          {{- end}}
+          {{- if .Values.receiver.envFrom }}
+          envFrom:
+{{ toYaml .Values.receiver.envFrom | indent 10 }}
           {{- end }}
           ports:
           {{- range .Values.receiver.specs.network.ports }}

@@ -106,7 +106,21 @@ receiver:
       annotations: {}
       labels: {}
 
-  env: {}
+  envs: []
+    # - name: static-env
+    #  value: value
+    # - name: "example for env name coming from secrets"
+    #  valueFrom:
+    #    secretKeyRef:
+    #      name: secret-name
+    #      key: key-name
+
+  # Allows you to load environment variables from kubernetes secret or config map
+  envFrom: []
+    # - secretRef:
+    #     name: env-secret
+    # - configMapRef:
+  #     name: config-map
 
   monitoring:
     serviceMonitoring:
@@ -391,7 +405,22 @@ collector:
       annotations: {}
       labels: {}
 
-  env: {}
+  tokenSpecified: false
+  envs:
+    - name: token
+      value: ''
+    # - name: "example for env name coming from secrets"
+    #  valueFrom:
+    #    secretKeyRef:
+    #      name: secret-name
+    #      key: key-name
+
+  # Allows you to load environment variables from kubernetes secret or config map
+  envFrom: []
+    # - secretRef:
+    #     name: env-secret
+    # - configMapRef:
+    #     name: config-map
 
   monitoring:
     serviceMonitoring:

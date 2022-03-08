@@ -27,7 +27,7 @@ data:
   {{ .Values.collector.specs.volumes.serviceConfig.fileName }}: |
     config_sources:
       aspecto:
-        token: {{ required "A valid api token is required." .Values.global.aspecto.apiToken }}
+        token: ${token}
         interval: {{ .Values.global.aspecto.interval | default 10 }}
 
     receivers:

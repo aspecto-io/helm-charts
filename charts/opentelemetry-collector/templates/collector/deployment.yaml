@@ -14,7 +14,9 @@
 {{- $globalSubAnnotations := $globalMetadata.pod.annotations }}
 {{- $localSubAnnotations := $localMetadata.pod.annotations -}}
 {{- $localSubLabels := $localMetadata.pod.labels -}}
-apiVersion: apps/v1
+{{- if not .Values.collector.tokenSpecified }}
+{{- fail "missing token value in envs .Values.collector.envs please add it according to preferences and change .Values.collector.tokenSpecified to true" }}
+{{- end }}
 kind: Deployment
 metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-deployment
@@ -70,12 +72,13 @@ spec:
               mountPath: {{ .mountPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
-          {{- if .Values.collector.env }}
+          {{- if .Values.collector.envs }}
           env:
-          {{- range $key, $value := .Values.collector.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
+{{ toYaml .Values.collector.envs | indent 10 }}
           {{- end }}
+          {{- if .Values.collector.envFrom }}
+          envFrom:
+{{ toYaml .Values.collector.envFrom | indent 10 }}
           {{- end }}
           ports:
           {{- range .Values.collector.specs.network.ports }}
