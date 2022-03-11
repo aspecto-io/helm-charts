@@ -3,8 +3,6 @@ global:
   namespace: dev
   env: {}
   aspecto:
-    existingSecret: false
-    apiToken: ''
     environment: ''
     interval: 60
   rolloutStrategy:
@@ -405,10 +403,9 @@ collector:
       annotations: {}
       labels: {}
 
-  tokenSpecified: false
   envs:
     - name: token
-      value: ''
+      value: ""
     # - name: "example for env name coming from secrets"
     #  valueFrom:
     #    secretKeyRef:

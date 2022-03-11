@@ -53,7 +53,7 @@ data:
             value: true
             action: insert
           - key: aspecto.token
-            value: {{ required "A valid api token is required." .Values.global.aspecto.apiToken }}
+            value: ${token}
             action: insert
           - key: deployment.environment
             value: {{ .Values.global.aspecto.environment }}

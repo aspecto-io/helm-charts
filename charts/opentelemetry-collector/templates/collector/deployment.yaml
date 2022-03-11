@@ -14,9 +14,23 @@
 {{- $globalSubAnnotations := $globalMetadata.pod.annotations }}
 {{- $localSubAnnotations := $localMetadata.pod.annotations -}}
 {{- $localSubLabels := $localMetadata.pod.labels -}}
-{{- if not .Values.collector.tokenSpecified }}
-{{- fail "missing token value in envs .Values.collector.envs please add it according to preferences and change .Values.collector.tokenSpecified to true" }}
+
+{{- define "is-missing-token" -}}
+    {{- $allenv := index . 0 -}}
+    {{- range $i, $envVariable := $allenv -}}
+        {{- if eq $envVariable.name "token" -}}
+            {{- if eq $envVariable.value "" -}}
+              true
+            {{- end -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+
+{{ $missingToken := include "is-missing-token" (list .Values.collector.envs ) }}
+{{- if or ($missingToken) (not (contains ":token " (.Values.collector.envs | toStrings | join ","))) }} }}
+{{- fail "missing token value in envs .Values.collector.envs please add it according to your preferences" }}
 {{- end }}
+
 kind: Deployment
 metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-deployment

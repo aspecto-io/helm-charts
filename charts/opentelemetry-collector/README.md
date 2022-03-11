@@ -29,7 +29,7 @@ ___
 # Prerequisites
 * Kubernetes 1.12+
 * Helm 3.1.0 or higher
-* Aspecto.io account and api token 
+* Aspecto.io account and api token (which will be mapped in the environment variables of the collector)
 
 (*) we encourage you to use a DNS CNAME, it will ease on you possible changes in your deployment configuration with smaller footprint on production.
 ___
@@ -76,9 +76,7 @@ _This section of parameters will be shared across all objects unless specified p
 | global.`namespace` | Default namespace for objects (deployment/service/etc.) | 
 | global.`env` | Global environment variables | object | {} | false | string | empty | `true` |
 | ***`Global.aspecto`*** : _aspecto configuration_ |
-| global.aspecto.`apiToken` | api token for aspecto integration. for more information go here: https://app.aspecto.io/app/integration/api-key | string | | `true` |
 | global.aspecto.`interval` | refresh rate to pull sampling configuration (in seconds) | number | 60 | `true` |
-| global.aspecto.`existingSecret` | Should we use the API token already existing in the kube secrets | boolean | false | `true` |
 | ***`Global.rolloutStrategy`*** : _deployment rollout configuration_ |
 | global.rolloutStrategy.`type` | rolling deployment strategy | `Recreate` ,  `RollingUpdate` | RollingUpdate | `true` |
 | global.rolloutStrategy.rollingUpdate.`maxUnavailable` | How many instances are allowed to be unavailable during the deployment | number | 0 | `true` |
@@ -108,6 +106,9 @@ _This section of parameters describes the receiver service_
 | receiver.metadata.shared.`labels` | labels to be shared across all child objects | object | {} | false |
 | receiver.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`annotations` | annotations to be shared across all pods | object | {} | false |
 | receiver.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`labels` | labels to be shared across all selected object | object | {} | false |
+| ***` receiver.envs`*** : _This section of parameters define environment variables._ |
+| receiver.envs | environment variables that will be defined on the deployment pods. value can be defined from any source (static, value, etc.) | array | [] | true |
+| receiver.envsFrom | environment variables that which will be imported and defined on the deployment pods. | array | [] | true |
 | ***`receiver.specs`*** : _This section of parameters define resources over the service_ |
 | ***`receiver.specs.configuration`*** : _service configuration_ |
 | receiver.specs.configuration.exporters.load_balancing.protocol.otlp.`timeout` | timeout of connection in case of no response | string | 1s | `true` |
@@ -188,6 +189,9 @@ _This section of parameters describes the  collector service_
 | collector.metadata.shared.`labels` | labels to be shared across all child objects | object | {} | false |
 | collector.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`annotations` | annotations to be shared across all pods | object | {} | false |
 | collector.metadata.{pod/deployment/service/configMap/hpa/virtualService/destinationRule}.`labels` | labels to be shared across all selected object | object | {} | false |
+| ***` collector.envs`*** : _This section of parameters define environment variables._ |
+| collector.envs | environment variables that will be defined on the deployment pods. one of them must be the token variable. value can be defined from any source (static, value, etc.) | array | [] | true |
+| collector.envsFrom | environment variables that which will be imported and defined on the deployment pods. | array | [] | true |
 | ***` collector.specs`*** : _This section of parameters define resources over the service_ |
 | ***` collector.specs.configuration`*** : _service configuration_ |
 | collector.specs.configuration.`endpoint` | timeout of connection in case of no response | string | 1s | `true` |
