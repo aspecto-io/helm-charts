@@ -27,7 +27,7 @@
 {{- end -}}
 
 {{ $missingToken := include "is-missing-token" (list .Values.collector.envs ) }}
-{{- if or ($missingToken) (not (contains ":token " (.Values.collector.envs | toStrings | join ","))) }} }}
+{{- if or ($missingToken) (not (contains ":token " (.Values.collector.envs | toStrings | join ","))) }}
 {{- fail "missing token value in envs .Values.collector.envs please add it according to your preferences" }}
 {{- end }}
 

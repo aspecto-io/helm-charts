@@ -373,9 +373,9 @@
                     }
                 },
                 "envs": {
-                    "type": "object",
+                    "type": "array",
                     "description": "environment variables, must include token value",
-                    "default": {}
+                    "default": []
                 },
                 "specs": {
                     "type": "object",
@@ -976,10 +976,10 @@
                         }
                     }
                 },
-                "env": {
-                    "type": "object",
+                "envs": {
+                    "type": "array",
                     "description": "environment variables",
-                    "default": {}
+                    "default": []
                 },
                 "specs": {
                     "type": "object",
