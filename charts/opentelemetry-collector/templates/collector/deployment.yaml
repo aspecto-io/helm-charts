@@ -32,6 +32,7 @@
 {{- end }}
 
 kind: Deployment
+apiVersion: apps/v1
 metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-deployment
   namespace: {{ .Values.collector.metadata.namespace |  default .Values.global.namespace }}
