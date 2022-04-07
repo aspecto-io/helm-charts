@@ -88,6 +88,9 @@ spec:
               readOnly: {{ .readOnly }}
           {{- end }}
           {{- if .Values.collector.envs }}
+          {{- if .Values.collector.serviceAccount.enabled }}
+{{ toYaml .Values.collector.serviceAccount.containerConfig | nindent 10 }}
+          {{- end }}
           env:
 {{ toYaml .Values.collector.envs | indent 10 }}
           {{- end }}

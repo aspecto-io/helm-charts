@@ -32,7 +32,7 @@ data:
       {{- if eq .name "grpc"}}
           grpc:
             endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-            max_recv_msg_size_mib: 1234123412341234123
+            max_recv_msg_size_mib: 4194304
       {{- end}}
       {{- if eq .name "http"}}
           http:

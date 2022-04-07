@@ -29,7 +29,6 @@ data:
       aspecto:
         token: ${token}
         interval: {{ .Values.global.aspecto.interval | default 10 }}
-
     receivers:
       otlp:
         protocols:
@@ -37,14 +36,13 @@ data:
       {{- if eq .name "grpc"}}
           grpc:
             endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-            max_recv_msg_size_mib: 10
+            max_recv_msg_size_mib: 4194304
       {{- end}}
       {{- if eq .name "http"}}
           http:
             endpoint: {{ $localListenerIp }}:{{ .internalPort }}
       {{- end}}
     {{- end}}
-
     processors:
       tail_sampling: $$aspecto:tail_sampling
       resource:
@@ -58,7 +56,6 @@ data:
           - key: deployment.environment
             value: {{ .Values.global.aspecto.environment }}
             action: insert
-
     exporters:
       otlphttp:
         endpoint: {{ .Values.collector.specs.configuration.endpoint }}
@@ -74,7 +71,6 @@ data:
         endpoint: {{ $localListenerIp }}:{{ .internalPort }}
     {{- end}}
     {{- end}}
-
     service:
       extensions: [health_check]
       pipelines:
@@ -87,3 +83,4 @@ data:
           {{ else }}
           exporters: [otlphttp]
           {{- end }}
+  
