@@ -3,8 +3,6 @@ global:
   namespace: dev
   env: {}
   aspecto:
-    existingSecret: false
-    apiToken: ''
     environment: ''
     interval: 60
   rolloutStrategy:
@@ -53,6 +51,9 @@ global:
       annotations: {}
       labels: {}
     podMonitor:
+      annotations: {}
+      labels: {}
+    serviceAccount:
       annotations: {}
       labels: {}
   image:
@@ -105,8 +106,25 @@ receiver:
     podMonitor:
       annotations: {}
       labels: {}
+    serviceAccount:
+      annotations: {}
+      labels: {}
 
-  env: {}
+  envs: []
+    # - name: static-env
+    #  value: value
+    # - name: "example for env name coming from secrets"
+    #  valueFrom:
+    #    secretKeyRef:
+    #      name: secret-name
+    #      key: key-name
+
+  # Allows you to load environment variables from kubernetes secret or config map
+  envFrom: []
+    # - secretRef:
+    #     name: env-secret
+    # - configMapRef:
+  #     name: config-map
 
   monitoring:
     serviceMonitoring:
@@ -117,6 +135,11 @@ receiver:
       enable: false
       podMetricsEndpoints:
         # - port: prometheus
+
+  serviceAccount:
+    enabled: false
+    config: {}
+    containerConfig: {}
 
   specs:
     jeager_collector:
@@ -390,8 +413,25 @@ collector:
     podMonitor:
       annotations: {}
       labels: {}
+    serviceAccount:
+      annotations: {}
+      labels: {}
 
-  env: {}
+  envs:
+    - name: token
+      value: ""
+    # - name: "example for env name coming from secrets"
+    #  valueFrom:
+    #    secretKeyRef:
+    #      name: secret-name
+    #      key: key-name
+
+  # Allows you to load environment variables from kubernetes secret or config map
+  envFrom: []
+    # - secretRef:
+    #     name: env-secret
+    # - configMapRef:
+    #     name: config-map
 
   monitoring:
     serviceMonitoring:
@@ -402,6 +442,11 @@ collector:
       enable: false
       podMetricsEndpoints:
       # - port: prometheus
+
+  serviceAccount:
+    enabled: false
+    config: {}
+    containerConfig: {}
 
   specs:
     jeager_collector: true

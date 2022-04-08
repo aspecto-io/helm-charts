@@ -173,11 +173,6 @@
                 "aspecto": {
                     "type": "object",
                     "properties": {
-                        "apiToken": {
-                            "type": "string",
-                            "description": "api token for aspecto integration. for more information go here: https://app.aspecto.io/app/integration/api-key",
-                            "default": null
-                        },
                         "environment": {
                             "type": "string",
                             "description": "the name of the environment",
@@ -187,11 +182,6 @@
                             "type": "number",
                             "description": "refresh rate to validate token (in seconds)",
                             "default": 10
-                        },
-                        "existingSecret": {
-                            "type": "boolean",
-                            "description": "Should we use the API token already existing in the kube secrets ",
-                            "default": false
                         }
                     }
                 },
@@ -382,10 +372,10 @@
                         }
                     }
                 },
-                "env": {
-                    "type": "object",
-                    "description": "environment variables",
-                    "default": {}
+                "envs": {
+                    "type": "array",
+                    "description": "environment variables, must include token value",
+                    "default": []
                 },
                 "specs": {
                     "type": "object",
@@ -986,10 +976,10 @@
                         }
                     }
                 },
-                "env": {
-                    "type": "object",
+                "envs": {
+                    "type": "array",
                     "description": "environment variables",
-                    "default": {}
+                    "default": []
                 },
                 "specs": {
                     "type": "object",

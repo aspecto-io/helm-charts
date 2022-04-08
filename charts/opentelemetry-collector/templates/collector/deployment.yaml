@@ -14,8 +14,25 @@
 {{- $globalSubAnnotations := $globalMetadata.pod.annotations }}
 {{- $localSubAnnotations := $localMetadata.pod.annotations -}}
 {{- $localSubLabels := $localMetadata.pod.labels -}}
-apiVersion: apps/v1
+
+{{- define "is-missing-token" -}}
+    {{- $allenv := index . 0 -}}
+    {{- range $i, $envVariable := $allenv -}}
+        {{- if eq $envVariable.name "token" -}}
+            {{- if eq $envVariable.value "" -}}
+              true
+            {{- end -}}
+        {{- end -}}
+    {{- end -}}
+{{- end -}}
+
+{{ $missingToken := include "is-missing-token" (list .Values.collector.envs ) }}
+{{- if or ($missingToken) (not (contains ":token " (.Values.collector.envs | toStrings | join ","))) }}
+{{- fail "missing token value in envs .Values.collector.envs please add it according to your preferences" }}
+{{- end }}
+
 kind: Deployment
+apiVersion: apps/v1
 metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-deployment
   namespace: {{ .Values.collector.metadata.namespace |  default .Values.global.namespace }}
@@ -70,12 +87,16 @@ spec:
               mountPath: {{ .mountPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
-          {{- if .Values.collector.env }}
-          env:
-          {{- range $key, $value := .Values.collector.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
+          {{- if .Values.collector.envs }}
+          {{- if .Values.collector.serviceAccount.enabled }}
+{{ toYaml .Values.collector.serviceAccount.containerConfig | nindent 10 }}
           {{- end }}
+          env:
+{{ toYaml .Values.collector.envs | indent 10 }}
+          {{- end }}
+          {{- if .Values.collector.envFrom }}
+          envFrom:
+{{ toYaml .Values.collector.envFrom | indent 10 }}
           {{- end }}
           ports:
           {{- range .Values.collector.specs.network.ports }}
