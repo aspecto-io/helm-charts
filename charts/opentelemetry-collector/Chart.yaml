@@ -1,6 +1,6 @@
 apiVersion: v2
 name: aspecto-io-opentelemetry-collector
-version: '1.4.0'
+version: '1.4.1'
 home: https://aspecto.io
 type: application
 description: helm chart of aspecto's opentelemetry tail sampling collector
