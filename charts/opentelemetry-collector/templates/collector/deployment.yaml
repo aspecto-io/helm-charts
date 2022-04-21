@@ -20,7 +20,7 @@
     {{- range $i, $envVariable := $allenv -}}
         {{- if eq $envVariable.name "token" -}}
             {{- if eq $envVariable.value "" -}}
-              true
+true
             {{- end -}}
         {{- end -}}
     {{- end -}}
@@ -67,8 +67,11 @@ spec:
     spec:
       volumes:
         - name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
-          configMap: 
+          configMap:
             name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
+      {{- if .Values.collector.serviceAccount.enabled }}
+      {{ toYaml .Values.collector.serviceAccount.containerConfig | nindent 6}}
+      {{- end }}
       containers:
         - name: "{{ .Values.global.name }}-{{ .Values.collector.metadata.name }}"
           image: "{{ .Values.collector.image.repository | default .Values.global.image.repository }}/{{ .Values.collector.image.name | default .Values.global.image.name }}:{{ .Values.collector.image.version | default .Values.global.image.version }}"
@@ -88,9 +91,6 @@ spec:
               readOnly: {{ .readOnly }}
           {{- end }}
           {{- if .Values.collector.envs }}
-          {{- if .Values.collector.serviceAccount.enabled }}
-{{ toYaml .Values.collector.serviceAccount.containerConfig | nindent 10 }}
-          {{- end }}
           env:
 {{ toYaml .Values.collector.envs | indent 10 }}
           {{- end }}
