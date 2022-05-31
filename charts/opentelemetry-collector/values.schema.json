@@ -492,7 +492,7 @@
                                     "type": "object",
                                     "properties": {
                                         "cpu": {
-                                            "type": "number",
+                                            "type": "string",
                                             "default": 2,
                                             "description": "Max number of cores to allocate"
                                         },
@@ -507,7 +507,7 @@
                                     "type": "object",
                                     "properties": {
                                         "cpu": {
-                                            "type": "number",
+                                            "type": "string",
                                             "default": 2,
                                             "description": "Number of cores to allocate"
                                         },
@@ -1071,7 +1071,7 @@
                                     "type": "object",
                                     "properties": {
                                         "cpu": {
-                                            "type": "number",
+                                            "type": "string",
                                             "default": 2,
                                             "description": "Max number of cores to allocate"
                                         },
@@ -1086,7 +1086,7 @@
                                     "type": "object",
                                     "properties": {
                                         "cpu": {
-                                            "type": "number",
+                                            "type": "string",
                                             "default": 2,
                                             "description": "Number of cores to allocate"
                                         },
