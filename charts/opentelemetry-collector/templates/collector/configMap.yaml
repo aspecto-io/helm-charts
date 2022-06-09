@@ -56,9 +56,14 @@ data:
           - key: deployment.environment
             value: {{ .Values.global.aspecto.environment }}
             action: insert
+      batch:
     exporters:
-      otlphttp:
+      otlp:
         endpoint: {{ .Values.collector.specs.configuration.endpoint }}
+        sending_queue:
+          enabled: true
+          queue_size: {{ .Values.collector.specs.configuration.queue_size }}
+          num_consumers: {{ .Values.collector.specs.configuration.num_consumers }}
       {{- if .Values.collector.specs.configuration.log.enable }}
       logging:
         logLevel: {{ .Values.collector.specs.configuration.log.level }}
@@ -77,10 +82,10 @@ data:
         traces:
           receivers:
             - otlp
-          processors: [tail_sampling, resource]
+          processors: [tail_sampling, resource, batch]
           {{- if .Values.collector.specs.configuration.log.enable }}
-          exporters: [otlphttp, logging]
+          exporters: [otlp, logging]
           {{ else }}
-          exporters: [otlphttp]
+          exporters: [otlp]
           {{- end }}
   
