@@ -452,7 +452,7 @@ collector:
     jeager_collector: true
     zipkin_collector: false
     configuration:
-      endpoint: https://collector.aspecto.io
+      endpoint: https://collector.aspecto.io:4317
       queue_size: 10000
       num_consumers: 20
       decision_wait: 10s
