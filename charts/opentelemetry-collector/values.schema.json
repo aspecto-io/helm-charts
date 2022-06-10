@@ -1007,6 +1007,10 @@
                                     "type": "string",
                                     "default": ""
                                 },
+                                "sending_queue": {
+                                    "type": "boolean",
+                                    "default": true
+                                },
                                 "queue_size": {
                                     "type": "number",
                                     "default": 10000
