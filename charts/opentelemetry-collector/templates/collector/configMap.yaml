@@ -56,9 +56,16 @@ data:
           - key: deployment.environment
             value: {{ .Values.global.aspecto.environment }}
             action: insert
+      batch:
     exporters:
-      otlphttp:
+      otlp:
         endpoint: {{ .Values.collector.specs.configuration.endpoint }}
+      {{- if .Values.collector.specs.configuration.sending_queue }}
+        sending_queue:
+          enabled: {{ .Values.collector.specs.configuration.sending_queue }}
+          queue_size: {{ .Values.collector.specs.configuration.queue_size }}
+          num_consumers: {{ .Values.collector.specs.configuration.num_consumers }}
+      {{- end }}
       {{- if .Values.collector.specs.configuration.log.enable }}
       logging:
         logLevel: {{ .Values.collector.specs.configuration.log.level }}
@@ -75,12 +82,11 @@ data:
       extensions: [health_check]
       pipelines:
         traces:
-          receivers:
-            - otlp
-          processors: [tail_sampling, resource]
+          receivers: [otlp]
+          processors: [tail_sampling, resource, batch]
           {{- if .Values.collector.specs.configuration.log.enable }}
-          exporters: [otlphttp, logging]
+          exporters: [otlp, logging]
           {{ else }}
-          exporters: [otlphttp]
+          exporters: [otlp]
           {{- end }}
   

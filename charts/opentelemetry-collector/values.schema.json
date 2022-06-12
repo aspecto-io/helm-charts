@@ -1007,6 +1007,18 @@
                                     "type": "string",
                                     "default": ""
                                 },
+                                "sending_queue": {
+                                    "type": "boolean",
+                                    "default": true
+                                },
+                                "queue_size": {
+                                    "type": "number",
+                                    "default": 10000
+                                },
+                                "num_consumers": {
+                                    "type": "number",
+                                    "default": 20
+                                },
                                 "decision_wait": {
                                     "type": "string",
                                     "description": "number of seconds to wait before closing the trace",

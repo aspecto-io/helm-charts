@@ -61,7 +61,8 @@ data:
         {{- end}}
       {{- end}}
     {{- end}}
-
+    processors:
+      batch:
     exporters:
       loadbalancing:
         protocol:
@@ -94,6 +95,6 @@ data:
     {{- if .Values.receiver.specs.zipkin_collector.enable }}
             - zipkin
     {{- end }}
-          processors: []
+          processors: [batch]
           exporters:
             - loadbalancing
