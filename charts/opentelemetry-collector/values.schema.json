@@ -1019,6 +1019,10 @@
                                     "type": "number",
                                     "default": 20
                                 },
+                                "timeout": {
+                                    "type": "string",
+                                    "default": "10s"
+                                },
                                 "decision_wait": {
                                     "type": "string",
                                     "description": "number of seconds to wait before closing the trace",

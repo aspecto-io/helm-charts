@@ -66,6 +66,7 @@ data:
           queue_size: {{ .Values.collector.specs.configuration.queue_size }}
           num_consumers: {{ .Values.collector.specs.configuration.num_consumers }}
       {{- end }}
+        timeout: {{ .Values.collector.specs.configuration.timeout }}
       {{- if .Values.collector.specs.configuration.log.enable }}
       logging:
         logLevel: {{ .Values.collector.specs.configuration.log.level }}
