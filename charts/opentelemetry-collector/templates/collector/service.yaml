@@ -27,6 +27,7 @@ metadata:
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   type: {{ .serviceType }}
+  clusterIP: None
   ports:
     {{- range .ports }}
     - port: {{ .externalPort }}
