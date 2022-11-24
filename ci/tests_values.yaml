@@ -1,7 +1,0 @@
-global:
-  name: otel-test
-  image:
-    version: latest
-  aspecto:
-    token:
-      value: 'test-api-token'
