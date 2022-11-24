@@ -1,0 +1,18 @@
+{{- $root := . }}
+
+Thank you for installing {{ .Chart.Name }}
+The collector is running with version "{{ .Values.collector.image.repository | default .Values.global.image.repository }}/{{ .Values.collector.image.name | default .Values.global.image.name }}:{{ .Values.collector.image.version | default .Values.global.image.version }}"
+
+{{- if not .Values.global.aspecto.token.secret.existingSecretName }}
+    {{ required "You must provide a valid aspecto.token.value" .Values.global.aspecto.token.value }}
+{{- end }}
+
+The endpoint for you to set in the sdk configuration is:
+{{- if eq .Values.receiver.specs.service.serviceType "LoadBalancer"}}
+please run:
+    {{- with .Values.receiver.specs.service }}
+    `kubectl get service {{ $root.Values.global.name }}-{{ $root.Values.receiver.metadata.name }}-{{ .name }}-service -o jsonpath='{.status.loadBalancer.ingress.hostname}'`
+    {{- end }}
+{{- else if eq .Values.receiver.specs.service.serviceType "ClusterIP"}}
+    {{ .Values.global.name }}-{{ .Values.receiver.specs.service.name }}-service.{{ .Release.Namespace }}.svc
+{{- end }}

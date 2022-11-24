@@ -1,0 +1,49 @@
+{{- $globalMetadata := .Values.global.metadata -}}
+{{- $globalSharedLabels := $globalMetadata.shared.labels -}}
+{{- $globalObjectLabels := $globalMetadata.hpa.labels }}
+{{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
+{{- $globalObjectAnnotations := $globalMetadata.hpa.annotations }}
+{{- $localMetadata := .Values.collector.metadata -}}
+{{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
+{{- $localObjectAnnotations := $localMetadata.hpa.annotations -}}
+{{- $localSharedLabels := $localMetadata.shared.labels -}}
+{{- $localObjectLabels := $localMetadata.hpa.labels -}}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+{{- if .Values.collector.specs.autoscaling.enable }}
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-hpa
+  labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  annotations: {{- if $globalSharedAnnotations }}{{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}{{- end}}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ .Values.global.name }}-{{ $localMetadata.name }}-deployment
+  minReplicas: {{ .Values.collector.specs.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.collector.specs.autoscaling.maxReplicas }}
+  metrics:
+  {{- with .Values.collector.specs.autoscaling.targetMemoryUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ . }}
+  {{- end }}
+  {{- with .Values.collector.specs.autoscaling.targetCPUUtilizationPercentage }}
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ . }}
+  {{- end }}
+{{- end }}

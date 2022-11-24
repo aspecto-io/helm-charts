@@ -1,0 +1,138 @@
+{{- define "collector.reciver.protocol.otlp" -}}
+{{- $service := .service }}
+{{- $localListenerIp := .localListenerIp }}
+{{- range .protocols }}
+{{- if and (eq .name $service) (.enabled )}}
+{{- if eq .name "jaeger-http"}}thrift_http:{{- else if eq .name "jaeger-grpc" }}grpc:{{- else }}{{ .name }}:{{- end }}
+  endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+    {{- if eq .name "grpc" }}
+  max_recv_msg_size_mib: {{ .maxReceivedMessageSizeMiB }}
+    {{- end }}
+{{- end }}
+    {{- end }}
+{{- end }}
+
+{{- define "collector.reciver.protocol.metrics" -}}{{ $service := .service }}{{ $localListenerIp := .localListenerIp }}
+{{- range .protocols }}
+    {{- if and (eq .name $service) (.enabled )}}
+  prometheus:
+    config:
+      scrape_configs:
+        - job_name: "otelcol-sampling"
+          scrape_interval: 10s
+          static_configs:
+            - targets: ["{{ $localListenerIp }}:{{ .internalPort }}"]
+    {{- end }}
+{{- end }}
+{{- end }}
+
+
+{{- define "collector.configMap.processors.resource" -}}
+{{ printf "" }}
+  attributes:
+    - key: aspecto.customer.prem
+      value: true
+      action: insert
+    - key: aspecto.token
+      value: ${token}
+      action: insert
+    - key: deployment.environment
+      value: {{ .environment }}
+      action: insert
+{{- end }}
+
+
+{{- define "collector.configMap.services.telemetry" }}
+{{ $localListenerIp := .localListenerIp }}
+{{- range .protocols }}
+{{- if and (eq .name "metrics") (.enabled )}}
+telemetry:
+  metrics:
+    address: {{ $localListenerIp }}:{{ .internalPort }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+
+{{- define "collector.configMap.processors.filter" }}
+{{- range .protocols }}
+{{- if and (eq .name "metrics") (.enabled )}}
+filter:
+  metrics:
+    include:
+      match_type: strict
+      metric_names:
+        - otelcol_processor_tail_sampling_policy_evaluation_decision
+        - otelcol_processor_tail_sampling_count_spans_sampled
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "collector.configMap.exporters.metrics" }}{{ $service := .service}}{{ $endpoint := .endpoint }}{{- range .protocols }}
+{{- if and (eq .name $service) (.enabled )}}
+otlp/metrics:
+  endpoint: {{ $endpoint }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "collector.configMap.exporters.sendingQueue" -}}
+{{- if .sending_queue }}
+  sending_queue:
+    enabled: {{ .sending_queue }}
+    queue_size: {{ .queue_size }}
+    num_consumers: {{ .num_consumers }}
+{{- end }}
+{{- end }}
+
+{{- define "collector.configMap.exporters.logs" -}}
+{{- if .enable }}
+  logging:
+    logLevel: {{ .logLevel }}
+{{- end }}
+{{- end }}
+
+{{- define "collector.configMap.extentions" -}}{{ $service := .service }}{{ $localListenerIp := .localListenerIp }}
+{{- range .protocols }}
+    {{- if and (eq .name $service) (.enabled )}}
+    {{ .name }}:
+      endpoint: {{ $localListenerIp }}:{{ .internalPort }}
+    {{- end }}
+{{- end }}
+{{- end }}
+
+
+{{- define "collector.configMap.services.healthCheck" -}}
+{{ printf "" }}
+  extensions: [health_check]
+{{- end }}
+
+{{- define "collector.configMap.services.pipelines.traces" -}}
+{{ printf "" }}
+    receivers: [otlp]
+    processors: [tail_sampling, resource, batch]
+    {{- if .logs }}
+    exporters: [otlp/traces, logging]
+    {{ else }}
+    exporters: [otlp/traces]
+    {{- end }}
+{{- end }}
+
+{{- define "collector.configMap.services.pipelines.metrics" -}}{{ $service := .service }}{{ $localListenerIp := .localListenerIp }}
+{{- range .protocols }}
+    {{- if and (eq .name $service) (.enabled )}}
+  metrics:
+    receivers: [prometheus]
+    processors: [filter, resource, batch]
+    exporters: [otlp/metrics]
+    {{- end }}
+{{- end }}
+{{- end }}
+
+{{- define "collector.services" -}}
+{{ $service := .service -}}
+{{- range .protocols }}{{- if and (eq .name $service) (.enabled )}}
+    - {{ .name }}
+{{- end }}
+{{- end }}
+{{- end }}

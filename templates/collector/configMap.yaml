@@ -1,0 +1,70 @@
+{{- $root := . -}}
+{{- $globalMetadata := .Values.global.metadata -}}
+{{- $globalSharedLabels := $globalMetadata.shared.labels -}}
+{{- $globalObjectLabels := $globalMetadata.configMap.labels }}
+{{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
+{{- $globalObjectAnnotations := $globalMetadata.configMap.annotations }}
+{{- $localMetadata := .Values.collector.metadata -}}
+{{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
+{{- $localObjectAnnotations := $localMetadata.configMap.annotations -}}
+{{- $localSharedLabels := $localMetadata.shared.labels -}}
+{{- $localObjectLabels := $localMetadata.configMap.labels -}}
+{{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+
+{{- $logs := .Values.collector.specs.configuration.log.enable }}
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
+  labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  annotations: {{- if $globalSharedAnnotations }}{{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}{{- end}}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
+data:
+  {{ .Values.collector.specs.volumes.serviceConfig.fileName }}: |
+  {{- if .Values.collector.specs.custom_config }}
+  {{ tpl ( toYaml .Values.collector.specs.custom_config | nindent 4) $ }}
+  {{- else }}
+    config_sources:
+      aspecto:
+        token: ${token}
+        interval: {{ .Values.global.aspecto.interval | default 10 }}
+    receivers:
+      otlp:
+        protocols:
+          {{- include "collector.reciver.protocol.otlp" (dict "service" "grpc" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 10 }}
+          {{- include "collector.reciver.protocol.otlp" (dict "service" "http" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 10 }}
+          {{- include "collector.reciver.protocol.metrics" (dict "service" "metrics" "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp) | indent 4}}
+    processors:
+      tail_sampling: $aspecto:tail_sampling
+      resource:
+        {{- include "collector.configMap.processors.resource" (dict "environment" .Values.global.aspecto.environment) | indent 6 }}
+      batch:
+        {{- include "collector.configMap.processors.filter" (dict "protocols" .Values.global.collector_services) | indent 6 }}
+
+    exporters:
+      otlp/traces:
+        endpoint: {{ .Values.collector.specs.configuration.collector_endpoint }}
+      {{- include "collector.configMap.exporters.sendingQueue" (dict "sending_queue" .Values.collector.specs.configuration.sending_queue "queue_size" .Values.collector.specs.configuration.queue_size "num_consumers" .Values.collector.specs.configuration.num_consumers) | indent 6 }}
+      {{- include "collector.configMap.exporters.logs" (dict "enable" .Values.collector.specs.configuration.log.enable "logLevel" .Values.collector.specs.configuration.log.level ) | indent 4 }}
+      {{- include "collector.configMap.exporters.metrics" (dict "protocols" .Values.global.collector_services "service" "metrics" "endpoint" .Values.collector.specs.configuration.metrics_endpoint) | indent 6 }}
+
+    extensions:
+    {{- include "collector.configMap.extentions" (dict "service" "health_check" "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp ) | indent 4 }}
+    {{- include "collector.configMap.extentions" (dict "service" "zpages" "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp ) | indent 4 }}
+
+    service:
+        {{- include "collector.configMap.services.telemetry" (dict "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp ) | indent 6 }}
+      extensions:
+      {{- include "collector.services" (dict "protocols" .Values.global.collector_services "service" "health_check") | indent 2 }}
+      {{- include "collector.services" (dict "protocols" .Values.global.collector_services "service" "zpages") | indent 2 }}
+      pipelines:
+        traces:
+        {{- include "collector.configMap.services.pipelines.traces" (dict "logs" $logs ) | indent 6 }}
+        {{- include "collector.configMap.services.pipelines.metrics" (dict "service" "metrics" "protocols" .Values.global.collector_services ) | indent 6 }}
+  {{- end }}

@@ -1,0 +1,582 @@
+global:
+  name: aspecto
+  env: {}
+  aspecto:
+    environment: production
+    interval: 60
+    token:
+      secret:
+        existingSecretName:
+        createNewSecret: false
+        keyName: 'api-token'
+      value:
+  rolloutStrategy:
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 3
+    type: RollingUpdate
+  collector_services:
+    - name: grpc
+      enabled: true
+      internalPort: 4317
+      externalPort: 4317
+      protocol: TCP
+      maxReceivedMessageSizeMiB: "4194304"
+    - name: http
+      enabled: true
+      internalPort: 4318
+      externalPort: 4318
+      protocol: TCP
+    - name: metricscol
+      # Default endpoint for querying metrics.
+      enabled: true
+      internalPort: 8888
+      externalPort: 8888
+      protocol: TCP
+    - name: health_check
+      # Default endpoint for querying open-telemetry health.
+      enabled: true
+      internalPort: 8090
+      externalPort: 8090
+      protocol: TCP
+    - name: metrics
+      enabled: true
+      internalPort: 9090
+      externalPort: 9090
+      protocol: TCP
+      endpoint: ''
+    - name: zipkin
+      enabled: true
+      internalPort: 9411
+      externalPort: 9411
+      protocol: TCP
+    - name: jaeger-grpc
+      enabled: true
+      internalPort: 14250
+      externalPort: 14250
+      protocol: TCP
+    - name: jaeger-http
+      enabled: true
+      internalPort: 14268
+      externalPort: 14268
+      protocol: TCP
+    - name: zpages
+      enabled: true
+      internalPort: 55679
+      externalPort: 55679
+      protocol: TCP
+  metadata:
+    shared:
+      annotations:
+        imageProvider: 'aspecto.io'
+      labels:
+        app: open-telemetry-collector
+        receiverVersion: "{{ .Values.receiver.image.version | default .Values.global.image.version }}"
+        collectorVersion: "{{ .Values.collector.image.version | default .Values.global.image.version }}"
+        chart/name: "{{ .Chart.Name }}"
+        chart/release: "{{ .Chart.Version }}"
+    pod:
+      annotations: {}
+      labels: {}
+    deployment:
+      annotations: {}
+      labels: {}
+    service:
+      annotations: {}
+      labels: {}
+    configMap:
+      annotations: {}
+      labels: {}
+    hpa:
+      annotations: {}
+      labels: {}
+    virtualService:
+      annotations: {}
+      labels: {}
+    destinationRule:
+      annotations: {}
+      labels: {}
+    gateway:
+      annotations: {}
+      labels: {}
+    secret:
+      annotations: {}
+      labels: {}
+    serviceMonitor:
+      annotations: {}
+      labels: {}
+    podMonitor:
+      annotations: {}
+      labels: {}
+    serviceAccount:
+      annotations: {}
+      labels: {}
+  image:
+    repository: 'public.ecr.aws/x3s3n8k7'
+    pullPolicy: Always
+    version: 'v0.50.3'
+
+receiver:
+  image:
+    repository: ''
+    policy: IfNotPresent
+    name: 'otelcol-loadbalancing'
+    version: ''
+
+  metadata:
+    name: receiver
+    shared:
+      annotations: {}
+      labels: {}
+    pod:
+      annotations: {}
+      labels:
+        component: otel-receiver-pod
+    deployment:
+      annotations: {}
+      labels: {}
+    service:
+      annotations: {}
+      labels:
+        component: otel-receiver-service
+    configMap:
+      annotations: {}
+      labels: {}
+    hpa:
+      annotations: {}
+      labels: {}
+    virtualService:
+      annotations: {}
+      labels: {}
+    destinationRule:
+      annotations: {}
+      labels: {}
+    gateway:
+      annotations: {}
+      labels: {}
+    serviceMonitor:
+      annotations: {}
+      labels: {}
+    podMonitor:
+      annotations: {}
+      labels: {}
+    serviceAccount:
+      annotations: {}
+      labels: {}
+
+  envs: []
+    # - name: static-env
+    #  value: value
+    # - name: "example for env name coming from secrets"
+    #  valueFrom:
+    #    secretKeyRef:
+    #      name: secret-name
+    #      key: key-name
+
+  # Allows you to load environment variables from kubernetes secret or config map
+  envFrom: []
+    # - secretRef:
+    #     name: env-secret
+    # - configMapRef:
+  #     name: config-map
+
+  monitoring:
+    serviceMonitoring:
+      enable: true
+      promNamespace: monitoring
+      portName: metrics
+    podMonitoring:
+      enable: false
+      podMetricsEndpoints:
+        # - port: prometheus
+
+  serviceAccount:
+    enabled: false
+    config: {}
+    containerConfig: {}
+
+  specs:
+    custom_config: {}
+
+    configuration:
+      exporters:
+        load_balancing:
+          protocol:
+            otlp:
+              timeout: 1s
+              tls:
+                insecure: true
+            resolver:
+              dns:
+                hostname:
+                port: 4317
+      log:
+        enable: true
+        level: debug
+      endpoint: 'aspecto-testing-gateway'
+
+    autoscaling:
+      enable: true
+      defaultReplicaCount: 2
+      minReplicas: 2
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 75
+
+    resources:
+      limits:
+        cpu: '1'
+        memory: 1Gi
+      requests:
+        cpu: '0.5'
+        memory: 0.5Gi
+
+    probe:
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 8090
+        initialDelaySeconds: 30
+        periodSeconds: 3
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 8090
+        initialDelaySeconds: 30
+        periodSeconds: 30
+
+    volumes:
+      serviceConfig:
+        name: service-configuration
+        mountPath: /config
+        fileName: receiver-config.yml
+      extraVolumes: []
+      # - name: configMapName
+      #   mountPath: /folder/path
+      #   subPath: filename.ext
+      extraSecretMounts: []
+      # - name: secret-files
+      #   mountPath: /path/to/file
+      #   secretName: secret-key-name
+      #   readOnly: true|false
+
+    network:
+      localListenerIp: 0.0.0.0
+      type: None
+
+      istio:
+        enabled: false
+        destinationRuleName: aspecto-otel-receiver-load-balancer-destinationRule
+        defaultHostHeader: aspecto-otel-receiver-load-balancer.io
+        subnetName: receiver
+        ruleTrafficPolicy:
+          loadBalancer:
+            simple: ROUND_ROBIN
+        subnetTrafficPolicy:
+          connectionPool:
+            tcp:
+              connectTimeout: 30ms
+              maxConnections: 100
+              tcpKeepalive:
+                interval: 75s
+                time: 7200s
+        uriPrefix: "/"
+        hostHeader:
+        rules:
+          - name: 'grpc'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 4317
+            hostHeader:
+          - name: 'http'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 4318
+            hostHeader:
+          - name: 'health-check'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 8090
+            hostHeader:
+          - name: 'metrics'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 8888
+            hostHeader:
+          - name: 'zipkin'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 9411
+            hostHeader:
+          - name: 'jaeger-grpc'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 14250
+            hostHeader:
+          - name: 'jaeger-http'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 14268
+            hostHeader:
+
+    service:
+      name: load-balancer
+      # Currently, we support 3 service types (ClusterIP, LoadBalancer)
+      # Internal - An internal service is a service that would only be accessed from inside the Kubernetes cluster.
+      # It will receive an internal IP address that other Kubernetes services could access to consume the service from.
+      #
+      # ClusterIP - This will create a simple service that would supply DNS round-robin load balancing for the service.
+      # This  will give external cluster access by a dedicated DNS address: <serviceName>.<namespace>.svc.kube.<cluster>.com
+      # This option is for when you need the most basic and simple load balancing.
+      #
+      # LoadBalancer - This is for when you need complex load balancing options. Based on user headers or specific uri prefixes.
+      # This is also the only option that would utilize Istio (https://istio.io/).
+      serviceType: LoadBalancer
+      loadBalancer:
+        simple: LEAST_CONN
+        host: aspecto-otel-receiver-load-balancer.io
+
+      selector:
+        component: otel-receiver-pod
+
+      ports:
+        extraPorts: []
+#       example
+#        - name: http
+#          type: http
+#          externalPort: 4318
+#          internalPort: 4318
+#          protocol: TCP
+        extraConfigPerPort: {}
+#          loadBalancer:
+#            - simple:
+
+collector:
+  image:
+    repository: ''
+    policy: Always
+    name: 'otelcol-sampling'
+    version: ''
+
+  metadata:
+    name: collector
+    shared:
+      annotations: {}
+      labels: {}
+    pod:
+      annotations: {}
+      labels:
+        component: otel-collector
+    deployment:
+      annotations: {}
+      labels: {}
+    service:
+      annotations: {}
+      labels:
+        component: otel-collector-service
+    configMap:
+      annotations: {}
+      labels: {}
+    hpa:
+      annotations: {}
+      labels: {}
+    virtualService:
+      annotations: {}
+      labels: {}
+    destinationRule:
+      annotations: {}
+      labels: {}
+    gateway:
+      annotations: {}
+      labels: {}
+    serviceMonitor:
+      annotations: {}
+      labels: {}
+    podMonitor:
+      annotations: {}
+      labels: {}
+    serviceAccount:
+      annotations: {}
+      labels: {}
+
+  envs: []
+    # - name: "example for env name coming from secrets"
+    #  valueFrom:
+    #    secretKeyRef:
+    #      name: secret-name
+    #      key: key-name
+
+  # Allows you to load environment variables from kubernetes secret or config map
+  envFrom: []
+    # - secretRef:
+    #     name: env-secret
+    # - configMapRef:
+    #     name: config-map
+
+  monitoring:
+    serviceMonitoring:
+      enable: true
+      promNamespace: monitoring
+      portName: metrics
+    podMonitoring:
+      enable: false
+      podMetricsEndpoints:
+      # - port: prometheus
+
+  serviceAccount:
+    enabled: false
+    config: {}
+    containerConfig: {}
+
+  specs:
+    custom_config: {}
+    jeager_collector: true
+    zipkin_collector: false
+    configuration:
+      collector_endpoint: https://collector.aspecto.io:4317
+      metrics_endpoint: https://metrics.aspecto.io:4317
+      sending_queue: true
+      queue_size: 10000
+      num_consumers: 20
+      decision_wait: 10s
+      num_traces: 100
+      expected_new_traces_per_sec: 10
+      policies: $$aspecto:tail_sampling_policy
+      log:
+        enable: true
+        level: debug
+
+    autoscaling:
+      enable: true
+      defaultReplicaCount: 2
+      minReplicas: 2
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 75
+      targetMemoryUtilizationPercentage: 75
+
+    resources:
+      limits:
+        cpu: '1'
+        memory: 1Gi
+      requests:
+        cpu: '0.5'
+        memory: 0.5Gi
+
+    probe:
+      readinessProbe:
+        httpGet:
+          path: /
+          port: 8090
+        initialDelaySeconds: 10
+        periodSeconds: 3
+      livenessProbe:
+        httpGet:
+          path: /
+          port: 8090
+        initialDelaySeconds: 10
+        periodSeconds: 30
+
+    volumes:
+      serviceConfig:
+        name: service-configuration
+        mountPath: /config
+        fileName: collector-config.yml
+      extraVolumes: []
+      # - name: configMapName
+      #   mountPath: /folder/path
+      #   subPath: filename.ext
+      extraSecretMounts: []
+      # - name: secret-files
+      #   mountPath: /path/to/file
+      #   secretName: secret-key-name
+      #   readOnly: true|false
+
+    network:
+      localListenerIp: 0.0.0.0
+      type: LoadBalancer
+      serviceName: open-telemetry-sampling
+
+      istio:
+        enabled: false
+        destinationRuleName: aspecto-otel-collector-tail-sampling-destinationRule
+        defaultHostHeader: aspecto-otel-receiver-load-balancer.io
+        subnetName: collector
+        ruleTrafficPolicy:
+          loadBalancer:
+            simple: ROUND_ROBIN
+        subnetTrafficPolicy:
+          connectionPool:
+            tcp:
+              maxConnections: 100
+              connectTimeout: 30ms
+              tcpKeepalive:
+                time: 7200s
+                interval: 75s
+        rules:
+          - name: 'grpc'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 4317
+            hostHeader:
+          - name: 'http'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 4318
+            hostHeader:
+          - name: 'health-check'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 8090
+            hostHeader:
+          - name: 'metrics'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 8888
+            hostHeader:
+          - name: 'zipkin'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 9411
+            hostHeader:
+          - name: 'jaeger-grpc'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 14250
+            hostHeader:
+          - name: 'jaeger-http'
+            ingress:
+              - uriPrefix: "/"
+                destinationPort: 14268
+            hostHeader:
+
+    service:
+      name: tail-sampling
+        # Currently, we support 2 service types (ClusterIP, LoadBalancer)
+        # Internal - An internal service is a service that would only be accessed from inside the Kubernetes cluster.
+        # It will receive an internal IP address that other Kubernetes services could access to consume the service from.
+        #
+        # ClusterIP - This will create a simple service that would supply DNS round-robin load balancing for the service.
+        # This  will give external cluster access by a dedicated DNS address: <serviceName>.<namespace>.svc.kube.<cluster>.com
+        # This option is for when you need the most basic and simple load balancing.
+        #
+        # LoadBalancer - This is for when you need complex load balancing options. Based on user headers or specific uri prefixes.
+        # This is also the only option that would utilize Istio (https://istio.io/).
+      serviceType: ClusterIP
+      loadBalancer:
+        simple: LEAST_CONN
+      host: aspecto-otel-collector-load-balancer.io
+
+      selector:
+        component: otel-collector
+
+      ports:
+        extraPorts: []
+        #       example
+        #        - name: http
+        #          type: http
+        #          externalPort: 4318
+        #          internalPort: 4318
+        #          protocol: TCP
+        extraConfigPerPort: {}
+#          loadBalancer:
+#            - simple:
