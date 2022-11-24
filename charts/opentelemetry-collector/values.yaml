@@ -1,9 +1,8 @@
 global:
   name: aspecto
-  namespace: dev
   env: {}
   aspecto:
-    environment: ''
+    environment: production
     interval: 60
     token:
       secret:
@@ -126,7 +125,6 @@ receiver:
 
   metadata:
     name: receiver
-    namespace: ''
     shared:
       annotations: {}
       labels: {}
@@ -362,7 +360,6 @@ collector:
 
   metadata:
     name: collector
-    namespace: ''
     shared:
       annotations: {}
       labels: {}

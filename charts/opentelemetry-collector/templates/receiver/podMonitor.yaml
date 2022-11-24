@@ -24,7 +24,6 @@ metadata:
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
   app: prometheus
   name: {{.Values.global.name }}-{{ $localMetadata.name }}-agent
-  namespace: {{ $localMetadata.namespace | default $root.Values.global.namespace }}
 spec:
   selector:
     matchLabels:

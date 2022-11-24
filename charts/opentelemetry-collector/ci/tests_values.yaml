@@ -1,10 +1,7 @@
 global:
   name: otel-test
-  namespace: testing
   image:
     version: latest
-
-collector:
-  envs:
-    - name: token
-      value: 'test-api-token'    
+  aspecto:
+    token:
+      value: 'test-api-token'

@@ -1,6 +1,5 @@
 global:
   name: otel-test
-  namespace: testing
   image:
     version: latest
   aspecto:

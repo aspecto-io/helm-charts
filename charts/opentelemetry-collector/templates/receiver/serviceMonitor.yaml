@@ -23,13 +23,12 @@ metadata:
   {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
   name: {{.Values.global.name }}-{{ $localMetadata.name }}-monitor
-  namespace: {{ $service.monitoring.serviceMonitoring.promNamespace }}
 spec:
   endpoints:
     - port: {{ $service.monitoring.serviceMonitoring.portName }}
   namespaceSelector:
     matchNames:
-      - {{ $localMetadata.namespace | default .Values.global.namespace }}
+      - {{ .Release.Namespace }}
   selector:
     matchLabels:
   {{- toYaml $localMetadata.service.labels | nindent 6 }}

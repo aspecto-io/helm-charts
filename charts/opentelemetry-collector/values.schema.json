@@ -10,11 +10,6 @@
                     "description": "Global prefix for objects (deployment/service/etc.)",
                     "default": ""
                 },
-                "namespace": {
-                    "type": "string",
-                    "description": "default namespace for objects (deployment/service/etc.)",
-                    "default": ""
-                },
                 "metadata": {
                     "type": "object",
                     "properties": {

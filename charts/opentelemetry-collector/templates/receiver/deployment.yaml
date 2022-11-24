@@ -18,7 +18,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ $root.Values.global.name }}-{{ $localMetadata.name }}-deployment
-  namespace: {{ .Values.receiver.metadata.namespace |  default .Values.global.namespace }}
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
   {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
   {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
