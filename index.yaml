@@ -2,6 +2,31 @@ apiVersion: v1
 entries:
   aspecto-io-opentelemetry-collector:
   - apiVersion: v2
+    created: "2022-11-24T07:16:16.895161495Z"
+    description: helm chart of aspecto's opentelemetry tail sampling collector
+    digest: 9af125312d6d3aac1f75ca5996a42042cb74b89c746b0a7bc3f119fc93c702f8
+    home: https://aspecto.io
+    icon: https://github.com/aspecto-io/helm-charts/blob/master/assets/aspecto-io.png
+    keywords:
+    - aspecto
+    - opentelemetry
+    - observability
+    - traces
+    - jaeger
+    - otel
+    - collector
+    - sampling
+    maintainers:
+    - name: dave-aspecto
+    name: aspecto-io-opentelemetry-collector
+    sources:
+    - https://github.com/open-telemetry/opentelemetry-collector
+    - https://github.com/open-telemetry/opentelemetry-collector-contrib
+    type: application
+    urls:
+    - https://github.com/aspecto-io/helm-charts/releases/download/aspecto-io-opentelemetry-collector-1.4.5/aspecto-io-opentelemetry-collector-1.4.5.tgz
+    version: 1.4.5
+  - apiVersion: v2
     created: "2022-06-21T08:42:23.582674191Z"
     description: helm chart of aspecto's opentelemetry tail sampling collector
     digest: 100f47de6c8fe3779b4a915ee42ed5d1f7a058ba55866d450aa65410999d468e
