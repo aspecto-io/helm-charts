@@ -182,6 +182,36 @@
                             "type": "number",
                             "description": "refresh rate to validate token (in seconds)",
                             "default": 10
+                        },
+                        "token": {
+                            "type": "object",
+                            "properties": {
+                                "secret": {
+                                    "type": "object",
+                                    "properties": {
+                                        "existingSecretName": {
+                                            "type": ["string","null"],
+                                            "description": "existing secret name",
+                                            "default": null
+                                        },
+                                        "createNewSecret": {
+                                            "type": "boolean",
+                                            "description": "create new secret",
+                                            "default": false
+                                        },
+                                        "keyName": {
+                                            "type": ["string","null"],
+                                            "description": "secret attribute name",
+                                            "default": null
+                                        }
+                                    }
+                                },
+                                "value": {
+                                    "type": ["string","null"],
+                                    "description": "the key of the token in the secret",
+                                    "default": null
+                                }
+                            }
                         }
                     }
                 },
@@ -208,6 +238,48 @@
                                     "default": 2
                                 }
                             }
+                        }
+                    }
+                },
+                "collector_services": {
+                    "type": "array",
+                    "description": "List of collector services",
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "The name of the collector service",
+                            "default": null
+                        },
+                        "enabled": {
+                            "type": "boolean",
+                            "description": "Enable or disable the collector service",
+                            "default": true
+                        },
+                        "internalPort": {
+                            "type": "number",
+                            "description": "The internal port of the collector service",
+                            "default": 80
+                        },
+                        "externalPort": {
+                            "type": "number",
+                            "description": "The external port of the collector service",
+                            "default": 80
+                        },
+                        "protocol": {
+                            "enum": ["TCP", "UDP"],
+                            "description": "The protocol of the collector service",
+                            "examples": ["TCP", "UDP"],
+                            "default": "TCP"
+                        },
+                        "maxReceivedMessageSizeMiB": {
+                            "type": "string",
+                            "description": "The max received message size in MiB",
+                            "default": 1
+                        },
+                        "endpoint": {
+                            "type": "string",
+                            "description": "The endpoint of the collector service",
+                            "default": null
                         }
                     }
                 }

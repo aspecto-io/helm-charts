@@ -62,7 +62,7 @@ tests:
       - tests_values.yaml
     set:
       collector.specs.network.istio.enabled: true
-      collector.specs.services.[0].serviceType: LoadBalancer
+      collector.specs.services.serviceType: LoadBalancer
     asserts:
       - isKind:
           of: DestinationRule

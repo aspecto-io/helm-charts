@@ -15,22 +15,6 @@
 {{- $localSubAnnotations := $localMetadata.pod.annotations -}}
 {{- $localSubLabels := $localMetadata.pod.labels -}}
 
-{{- define "is-missing-token" -}}
-    {{- $allenv := index . 0 -}}
-    {{- range $i, $envVariable := $allenv -}}
-        {{- if eq $envVariable.name "token" -}}
-            {{- if eq $envVariable.value "" -}}
-true
-            {{- end -}}
-        {{- end -}}
-    {{- end -}}
-{{- end -}}
-
-{{ $missingToken := include "is-missing-token" (list .Values.collector.envs ) }}
-{{- if or ($missingToken) (not (contains ":token " (.Values.collector.envs | toStrings | join ","))) }}
-{{- fail "missing token value in envs .Values.collector.envs please add it according to your preferences" }}
-{{- end }}
-
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -90,19 +74,26 @@ spec:
               mountPath: {{ .mountPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
-          {{- if .Values.collector.envs }}
           env:
-{{ toYaml .Values.collector.envs | indent 10 }}
-          {{- end }}
+  {{- if or ( $root.Values.global.aspecto.token.secret.createNewSecret) ($root.Values.global.aspecto.token.secret.existingSecretName) }}
+            - name: token
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.aspecto.token.secret.existingSecretName | default (printf "%s-token" .Values.global.name) }}
+                  key: {{ .Values.global.aspecto.token.secret.keyName }}
+  {{ else }}
+            - name: token
+              value: {{ .Values.global.aspecto.token.value }}
+  {{- end }}
+{{- if .Values.collector.envs }}{{ toYaml .Values.collector.envs | indent 10 }}{{- end}}
           {{- if .Values.collector.envFrom }}
           envFrom:
 {{ toYaml .Values.collector.envFrom | indent 10 }}
           {{- end }}
           ports:
-          {{- range .Values.collector.specs.network.ports }}
+          {{- range .Values.global.collector_services }}
             - containerPort: {{ .internalPort }}
-              type: {{ .type }}
-              name: {{ .name  }}
+              name: {{ .name | replace "_" "-" }}
               protocol: {{ .protocol }}
           {{- end }}
           {{- if .Values.collector.specs.probe }}

@@ -10,6 +10,9 @@
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.configMap.labels -}}
 {{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
+
+{{- $logs := .Values.collector.specs.configuration.log.enable }}
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -25,6 +28,9 @@ metadata:
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 data:
   {{ .Values.collector.specs.volumes.serviceConfig.fileName }}: |
+  {{- if .Values.collector.specs.custom_config }}
+  {{ tpl ( toYaml .Values.collector.specs.custom_config | nindent 4) $ }}
+  {{- else }}
     config_sources:
       aspecto:
         token: ${token}
@@ -32,61 +38,34 @@ data:
     receivers:
       otlp:
         protocols:
-    {{- range .Values.collector.specs.network.ports }}
-      {{- if eq .name "grpc"}}
-          grpc:
-            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-            max_recv_msg_size_mib: 4194304
-      {{- end}}
-      {{- if eq .name "http"}}
-          http:
-            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-      {{- end}}
-    {{- end}}
+          {{- include "collector.reciver.protocol.otlp" (dict "service" "grpc" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 10 }}
+          {{- include "collector.reciver.protocol.otlp" (dict "service" "http" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 10 }}
+          {{- include "collector.reciver.protocol.metrics" (dict "service" "metrics" "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp) | indent 4}}
     processors:
-      tail_sampling: $$aspecto:tail_sampling
+      tail_sampling: $aspecto:tail_sampling
       resource:
-        attributes:
-          - key: aspecto.customer.prem
-            value: true
-            action: insert
-          - key: aspecto.token
-            value: ${token}
-            action: insert
-          - key: deployment.environment
-            value: {{ .Values.global.aspecto.environment }}
-            action: insert
+        {{- include "collector.configMap.processors.resource" (dict "environment" .Values.global.aspecto.environment) | indent 6 }}
       batch:
-    exporters:
-      otlp:
-        endpoint: {{ .Values.collector.specs.configuration.endpoint }}
-      {{- if .Values.collector.specs.configuration.sending_queue }}
-        sending_queue:
-          enabled: {{ .Values.collector.specs.configuration.sending_queue }}
-          queue_size: {{ .Values.collector.specs.configuration.queue_size }}
-          num_consumers: {{ .Values.collector.specs.configuration.num_consumers }}
-      {{- end }}
-      {{- if .Values.collector.specs.configuration.log.enable }}
-      logging:
-        logLevel: {{ .Values.collector.specs.configuration.log.level }}
-      {{- end }}
+        {{- include "collector.configMap.processors.filter" (dict "protocols" .Values.global.collector_services) | indent 6 }}
 
-    {{- range .Values.collector.specs.network.ports }}
-    {{- if eq .name "health-check"}}
+    exporters:
+      otlp/traces:
+        endpoint: {{ .Values.collector.specs.configuration.collector_endpoint }}
+      {{- include "collector.configMap.exporters.sendingQueue" (dict "sending_queue" .Values.collector.specs.configuration.sending_queue "queue_size" .Values.collector.specs.configuration.queue_size "num_consumers" .Values.collector.specs.configuration.num_consumers) | indent 6 }}
+      {{- include "collector.configMap.exporters.logs" (dict "enable" .Values.collector.specs.configuration.log.enable "logLevel" .Values.collector.specs.configuration.log.level ) | indent 4 }}
+      {{- include "collector.configMap.exporters.metrics" (dict "protocols" .Values.global.collector_services "service" "metrics" "endpoint" .Values.collector.specs.configuration.metrics_endpoint) | indent 6 }}
+
     extensions:
-      health_check:
-        endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-    {{- end}}
-    {{- end}}
+    {{- include "collector.configMap.extentions" (dict "service" "health_check" "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp ) | indent 4 }}
+    {{- include "collector.configMap.extentions" (dict "service" "zpages" "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp ) | indent 4 }}
+
     service:
-      extensions: [health_check]
+        {{- include "collector.configMap.services.telemetry" (dict "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp ) | indent 6 }}
+      extensions:
+      {{- include "collector.services" (dict "protocols" .Values.global.collector_services "service" "health_check") | indent 2 }}
+      {{- include "collector.services" (dict "protocols" .Values.global.collector_services "service" "zpages") | indent 2 }}
       pipelines:
         traces:
-          receivers: [otlp]
-          processors: [tail_sampling, resource, batch]
-          {{- if .Values.collector.specs.configuration.log.enable }}
-          exporters: [otlp, logging]
-          {{ else }}
-          exporters: [otlp]
-          {{- end }}
-  
+        {{- include "collector.configMap.services.pipelines.traces" (dict "logs" $logs ) | indent 6 }}
+        {{- include "collector.configMap.services.pipelines.metrics" (dict "service" "metrics" "protocols" .Values.global.collector_services ) | indent 6 }}
+  {{- end }}

@@ -28,73 +28,40 @@ data:
     receivers:
       otlp:
         protocols:
-    {{- range .Values.receiver.specs.network.ports }}
-      {{- if eq .name "grpc"}}
-          grpc:
-            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-            max_recv_msg_size_mib: 4194304
-      {{- end}}
-      {{- if eq .name "http"}}
-          http:
-            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-      {{- end}}
-    {{- end}}
-    {{- if .Values.receiver.specs.jeager_collector.enable }}
+          {{- include "reciver.protocols" (dict "service" "grpc" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 10 }}
+          {{- include "reciver.protocols" (dict "service" "http" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 10 }}
+      {{- include "reciver.protocols" (dict "service" "zipkin" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 6 }}
       jaeger:
         protocols:
-      {{- range .Values.receiver.specs.network.ports }}
-        {{- if eq .name "jaeger-grpc"}}
-          grpc:
-            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-        {{- end}}
-        {{- if eq .name "jaeger-http"}}
-          thrift_http:
-            endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-        {{- end}}
-      {{- end}}
-    {{- end}}
-    {{- if .Values.receiver.specs.zipkin_collector.enable }}
-      zipkin:
-      {{- range .Values.receiver.specs.network.ports }}
-        {{- if eq .name "zipkin"}}
-        endpoint: {{ $localListenerIp }}:{{ .internalPort }}
-        {{- end}}
-      {{- end}}
-    {{- end}}
+          {{- include "reciver.protocols" (dict "service" "jaeger-grpc" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 10 }}
+          {{- include "reciver.protocols" (dict "service" "jaeger-http" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 10 }}
+
     processors:
       batch:
     exporters:
-      loadbalancing:
-        protocol:
-          otlp:
-            timeout: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.otlp.timeout }}
-            tls:
-              insecure: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.otlp.tls.insecure }}
-        resolver:
-          dns:
-            hostname: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.hostname }}
-            port: {{ .Values.receiver.specs.configuration.exporters.load_balancing.protocol.resolver.dns.port }}
+      {{- include "reciver.exporters" (dict "Values" .Values) | indent 4 }}
 
-    {{- range .Values.receiver.specs.network.ports }}
-      {{- if eq .name "health-check"}}
     extensions:
-      health_check:
-        endpoint: "{{ $localListenerIp }}:{{ .internalPort }}"
-      {{- end }}
-    {{- end }}
+    {{- include "receiver.configMap.extentions" (dict "service" "health_check" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | indent 2 }}
+    {{- include "receiver.configMap.extentions" (dict "service" "zpages" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | indent 2 }}
 
     service:
-      extensions: [health_check]
+        {{- include "reciver.configMap.services.telemetry" (dict "protocols" .Values.global.collector_services "service" "metrics" "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | indent 6}}
+      extensions:
+        {{- include "reciver.services" (dict "protocols" .Values.global.collector_services "service" "health_check") | indent 2 }}
+        {{- include "reciver.services" (dict "protocols" .Values.global.collector_services "service" "zpages") | indent 2 }}
+
       pipelines:
         traces:
           receivers:
             - otlp
-    {{- if .Values.receiver.specs.jeager_collector.enable }}
+            {{- include "reciver.services" (dict "protocols" .Values.global.collector_services "service" "zipkin") | indent 8 }}
+            {{- if (include "reciver.services.jaeger" (dict "protocols" .Values.global.collector_services) ) }}
             - jaeger
-    {{- end }}
-    {{- if .Values.receiver.specs.zipkin_collector.enable }}
-            - zipkin
-    {{- end }}
-          processors: [batch]
+            {{- end }}
+          processors:
+            - batch
           exporters:
             - loadbalancing
+
+

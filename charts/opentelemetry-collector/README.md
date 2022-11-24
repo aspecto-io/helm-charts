@@ -42,7 +42,7 @@ console helm repo add aspecto https://aspecto.github.io/opentelemetry-helm-chart
 2. go to https://app.aspecto.io/app/integration/api-key and copy your api key 
 3. run the install command: 
 ```bash
-helm install opentelemetry-collector aspecto/opentelemetry-collector --set apiKey=YOUR_API_KEY
+helm install --name aspecto-collector aspecto/aspecto-io-opentelemetry-collector --set global.aspecto.environment="<env>" --set global.aspecto.token.value="<token>" --set global.namespace="<namespace>"
 ```
 ___
 ## Configuration

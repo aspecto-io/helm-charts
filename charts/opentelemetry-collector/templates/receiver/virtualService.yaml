@@ -30,17 +30,15 @@ spec:
   hosts:
     - {{ $rule.hostHeader | default $istio.defaultHostHeader }}
   gateways:
-    - {{ $root.Values.global.name }}-{{ $localMetadata.name }}-gateway
+    - {{ .name }}-{{ $localMetadata.name }}-gateway
   http:
-  {{- range .ingress }}
     - match:
       - uri:
-          prefix: {{ .uriPrefix }}
+          prefix: {{ $.Values.receiver.specs.network.istio.uriPrefix }}
       route:
       - destination:
           host: {{ $rule.hostHeader | default $istio.defaultHostHeader }}
-          subset: {{ $istio.subnetName }}
-  {{- end }}
+          subset: {{ $.Values.receiver.specs.network.istio.subnetName }}
 {{- end }}
 ---
 {{- end }}

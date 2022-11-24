@@ -82,10 +82,9 @@ spec:
 {{ toYaml .Values.receiver.envFrom | indent 10 }}
           {{- end }}
           ports:
-          {{- range .Values.receiver.specs.network.ports }}
+          {{- range .Values.global.collector_services }}
             - containerPort: {{ .internalPort }}
-              type: {{ .type }}
-              name: {{ .name  }}
+              name: {{ .name | replace "_" "-" }}
               protocol: {{ .protocol }}
           {{- end }}
           {{- if .Values.receiver.specs.probe }}

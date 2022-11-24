@@ -12,12 +12,8 @@
 {{- $version := tpl ( toString $globalSharedLabels.receiverVersion ) . }}
 {{- if .Values.receiver.specs.network.istio.enabled }}
 {{- $host := .Values.receiver.specs.network.istio.defaultHostHeader -}}
-{{- range .Values.receiver.specs.services }}
-{{ $desinationRuleName := printf "%s-%s-%s-detinationRule" $root.Values.global.name $localMetadata.name .name | lower }}
-{{ $rule := . }}
-
+{{ $desinationRuleName := printf "%s-%s-%s-detinationRule" .Values.global.name $localMetadata.name .Values.receiver.specs.service.name | lower }}
 ---
-{{ $rule := . }}
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
@@ -31,20 +27,17 @@ metadata:
   {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
-  host: {{ $root.Values.receiver.specs.network.istio.defaultHostHeader }}
+  host: {{ .Values.receiver.specs.network.istio.defaultHostHeader }}
   trafficPolicy:
     portLevelSettings:
-      {{- range .ports }}
+      {{- range .Values.global.collector_services }}
       - port:
-          number: {{ .internalPort }}
-        loadBalancer:
-          simple: {{ .loadBalancer.simple | default $rule.loadBalancer.simple }}
+          number: {{ .internalPort }}{{ toYaml $root.Values.receiver.specs.network.istio.ruleTrafficPolicy | nindent 8 }}
       {{- end }}
   subsets:
-    - name: {{ $root.Values.receiver.specs.network.istio.subnetName }}
+    - name: {{ .Values.receiver.specs.network.istio.subnetName }}
       labels:
         app: {{ $globalSharedLabels.app }}
         receiverVersion: {{ $version }}
-      trafficPolicy: {{ toYaml $root.Values.receiver.specs.network.istio.trafficPolicy | nindent 8 }}
-  {{- end }}
-  {{- end }}
+      trafficPolicy: {{ toYaml .Values.receiver.specs.network.istio.subnetTrafficPolicy | nindent 8 }}
+{{- end }}

@@ -59,6 +59,7 @@ tests:
       - tests_values.yaml
     set:
       receiver.specs.network.istio.enabled: true
+      receiver.specs.services.serviceType: LoadBalancer
     asserts:
       - isKind:
           of: VirtualService
@@ -71,10 +72,12 @@ tests:
       - tests_values.yaml
     set:
       receiver.specs.network.istio.enabled: true
-      receiver.specs.services.[0].serviceType: LoadBalancer
+      receiver.specs.services.serviceType: LoadBalancer
     asserts:
       - isKind:
           of: DestinationRule
+      - isAPIVersion:
+          of: networking.istio.io/v1beta1
   - it: receiver-gateway
     template: receiver/gateway.yaml
     values:
