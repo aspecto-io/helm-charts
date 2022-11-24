@@ -1,19 +1,19 @@
 {{- $root := . -}}
   {{- $globalMetadata := .Values.global.metadata -}}
   {{- $globalSharedLabels := $globalMetadata.shared.labels -}}
-  {{- $globalObjectLabels := $globalMetadata.podMonitor.labels }}
+  {{- $globalObjectLabels := $globalMetadata.gateway.labels }}
   {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
-  {{- $globalObjectAnnotations := $globalMetadata.podMonitor.annotations }}
-  {{- $service := .Values.receiver -}}
-  {{- $localMetadata := $service.metadata -}}
+  {{- $globalObjectAnnotations := $globalMetadata.gateway.annotations }}
+  {{- $localMetadata := .Values.collector.metadata -}}
   {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
-  {{- $localObjectAnnotations := $localMetadata.podMonitor.annotations -}}
+  {{- $localObjectAnnotations := $localMetadata.gateway.annotations -}}
   {{- $localSharedLabels := $localMetadata.shared.labels -}}
-  {{- $localObjectLabels := $localMetadata.podMonitor.labels -}}
-  {{- if $service.monitoring.podMonitoring.enable }}
-apiVersion: monitoring.coreos.com/v1
-kind: PodMonitor
+  {{- $localObjectLabels := $localMetadata.gateway.labels -}}
+  {{- if .Values.collector.specs.network.istio.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
 metadata:
+  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-gateway
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
   {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
   {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
@@ -22,12 +22,14 @@ metadata:
   {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
   {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
-  app: prometheus
-  name: {{.Values.global.name }}-{{ $localMetadata.name }}-agent
 spec:
   selector:
-    matchLabels:
-  {{- toYaml $localMetadata.pod.labels | nindent 6 }}
-  podMetricsEndpoints:
-  {{- toYaml $service.monitoring.podMonitoring.podMetricsEndpoints | nindent 2 }}
-  {{- end}}
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+      - {{ .Values.receiver.specs.network.istio.defaultHostHeader }}
+  {{- end }}

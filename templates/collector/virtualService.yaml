@@ -4,16 +4,17 @@
 {{- $globalObjectLabels := $globalMetadata.virtualService.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.virtualService.annotations }}
-{{- $localMetadata := .Values.receiver.metadata -}}
+{{- $localMetadata := .Values.collector.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
 {{- $localObjectAnnotations := $localMetadata.virtualService.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.virtualService.labels -}}
-{{- $istio := .Values.receiver.specs.network.istio }}
+{{- $istio := .Values.collector.specs.network.istio }}
 {{- $detinationRule := $istio.destinationRuleName }}
-{{- if .Values.receiver.specs.network.istio.enabled }}
-{{- range .Values.receiver.specs.network.istio.rules }}
+{{- if .Values.collector.specs.network.istio.enabled }}
+{{- range .Values.collector.specs.network.istio.rules }}
 {{- $rule := . }}
+
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -30,15 +31,17 @@ spec:
   hosts:
     - {{ $rule.hostHeader | default $istio.defaultHostHeader }}
   gateways:
-    - {{ .name }}-{{ $localMetadata.name }}-gateway
+    - {{ $root.Values.global.name }}-{{ $localMetadata.name }}-gateway
   http:
+    {{- range .ingress }}
     - match:
-      - uri:
-          prefix: {{ $.Values.receiver.specs.network.istio.uriPrefix }}
+        - uri:
+            prefix: {{ .uriPrefix }}
       route:
-      - destination:
-          host: {{ $rule.hostHeader | default $istio.defaultHostHeader }}
-          subset: {{ $.Values.receiver.specs.network.istio.subnetName }}
+        - destination:
+            host: {{ $rule.hostHeader | default $istio.defaultHostHeader }}
+            subset: {{ $istio.subnetName }}
+  {{- end }}
 {{- end }}
 ---
 {{- end }}

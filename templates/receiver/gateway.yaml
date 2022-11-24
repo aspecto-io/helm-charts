@@ -1,20 +1,19 @@
 {{- $root := . -}}
 {{- $globalMetadata := .Values.global.metadata -}}
 {{- $globalSharedLabels := $globalMetadata.shared.labels -}}
-{{- $globalObjectLabels := $globalMetadata.service.labels }}
+{{- $globalObjectLabels := $globalMetadata.gateway.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
-{{- $globalObjectAnnotations := $globalMetadata.service.annotations }}
+{{- $globalObjectAnnotations := $globalMetadata.gateway.annotations }}
 {{- $localMetadata := .Values.receiver.metadata -}}
 {{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
-{{- $localObjectAnnotations := $localMetadata.service.annotations -}}
+{{- $localObjectAnnotations := $localMetadata.gateway.annotations -}}
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
-{{- $localObjectLabels := $localMetadata.service.labels -}}
-{{- $extraPortConfig := .Values.receiver.specs.service.ports.extraConfigPerPort }}
----
-apiVersion: v1
-kind: Service
+{{- $localObjectLabels := $localMetadata.gateway.labels -}}
+{{- if .Values.receiver.specs.network.istio.enabled }}
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
 metadata:
-  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.receiver.specs.service.name }}-service
+  name: {{ .Values.global.name }}-{{ $localMetadata.name }}-gateway
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
   {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
   {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
@@ -24,18 +23,13 @@ metadata:
   {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
-  type: {{ .Values.receiver.specs.service.serviceType }}
-  ports:
-  {{- range .Values.global.collector_services }}
-  {{- if eq .enabled true }}
-    - port: {{ .externalPort }}
-      targetPort: {{ .internalPort }}
-      protocol: {{ .protocol }}
-      name: {{ .name | replace "_" "-" }}
-      {{- if $root.Values.receiver.specs.service.ports.extraConfigPerPort }}
-      {{- toYaml $root.Values.receiver.specs.service.ports.extraConfigPerPort | nindent 6 }}
-      {{- end}}
-    {{- end  }}
-  {{- end }}
   selector:
-    {{- toYaml .Values.receiver.specs.service.selector | nindent 4}}
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - {{ .Values.receiver.specs.network.istio.defaultHostHeader }}
+{{- end }}

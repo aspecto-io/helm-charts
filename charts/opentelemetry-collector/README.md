@@ -42,7 +42,7 @@ console helm repo add aspecto https://aspecto.github.io/opentelemetry-helm-chart
 2. go to https://app.aspecto.io/app/integration/api-key and copy your api key 
 3. run the install command: 
 ```bash
-helm install opentelemetry-collector aspecto/opentelemetry-collector --set apiKey=YOUR_API_KEY
+helm install --name aspecto-collector aspecto/aspecto-io-opentelemetry-collector --set global.aspecto.token.value="<token>"
 ```
 ___
 ## Configuration
@@ -72,8 +72,7 @@ ___
 _This section of parameters will be shared across all objects unless specified per service_
 | Name | Description | Type/Options | Default | Required |
 | :--- | :--- | :--- | :--- | :---: |
-| global.`name` | Global prefix for objects (deployment/service/etc.) | string | empty | `true` |
-| global.`namespace` | Default namespace for objects (deployment/service/etc.) | 
+| global.`name` | Global prefix for objects (deployment/service/etc.) | string | empty | `true` | 
 | global.`env` | Global environment variables | object | {} | false | string | empty | `true` |
 | ***`Global.aspecto`*** : _aspecto configuration_ |
 | global.aspecto.`interval` | refresh rate to pull sampling configuration (in seconds) | number | 60 | `true` |
