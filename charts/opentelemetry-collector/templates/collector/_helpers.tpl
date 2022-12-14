@@ -41,6 +41,13 @@
       action: insert
 {{- end }}
 
+{{- define "collector.configMap.processors.spanmetrics" -}}
+{{- if .spanmetrics}}
+  spanmetrics:
+    metrics_exporter: otlp/metrics
+    dimensions: $aspecto:span_metrics
+{{- end }}
+{{- end }}
 
 {{- define "collector.configMap.services.telemetry" }}
 {{ $localListenerIp := .localListenerIp }}
@@ -110,7 +117,11 @@ otlp/metrics:
 {{- define "collector.configMap.services.pipelines.traces" -}}
 {{ printf "" }}
     receivers: [otlp]
+    {{- if .spanmetrics }}
+    processors: [spanmetrics, tail_sampling, resource, batch]
+    {{ else }}
     processors: [tail_sampling, resource, batch]
+    {{- end }}
     {{- if .logs }}
     exporters: [otlp/traces, logging]
     {{ else }}

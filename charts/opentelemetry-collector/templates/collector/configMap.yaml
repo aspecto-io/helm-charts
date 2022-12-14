@@ -46,6 +46,7 @@ data:
         {{- include "collector.configMap.processors.resource" (dict "environment" .Values.global.aspecto.environment) | indent 6 }}
       batch:
         {{- include "collector.configMap.processors.filter" (dict "protocols" .Values.global.collector_services) | indent 6 }}
+      {{- include "collector.configMap.processors.spanmetrics" (dict "spanmetrics" .Values.collector.specs.configuration.spanmetrics ) | indent 3 }}
 
     exporters:
       otlp/traces:
@@ -65,6 +66,6 @@ data:
       {{- include "collector.services" (dict "protocols" .Values.global.collector_services "service" "zpages") | indent 2 }}
       pipelines:
         traces:
-        {{- include "collector.configMap.services.pipelines.traces" (dict "logs" $logs ) | indent 6 }}
+        {{- include "collector.configMap.services.pipelines.traces" (dict "logs" $logs "spanmetrics" .Values.collector.specs.configuration.spanmetrics ) | indent 6 }}
         {{- include "collector.configMap.services.pipelines.metrics" (dict "service" "metrics" "protocols" .Values.global.collector_services ) | indent 6 }}
   {{- end }}
