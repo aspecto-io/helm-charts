@@ -46,7 +46,7 @@ data:
         {{- include "collector.configMap.processors.resource" (dict "environment" .Values.global.aspecto.environment) | indent 6 }}
       batch:
         {{- include "collector.configMap.processors.filter" (dict "protocols" .Values.global.collector_services) | indent 6 }}
-      {{- include "collector.configMap.processors.spanmetrics" (dict "spanmetrics" .Values.collector.specs.configuration.spanmetrics ) | indent 3 }}
+      {{- include "collector.configMap.processors.spanmetrics" (dict "spanmetrics" .Values.collector.specs.configuration.spanmetrics ) | indent 4 }}
 
     exporters:
       otlp/traces:
