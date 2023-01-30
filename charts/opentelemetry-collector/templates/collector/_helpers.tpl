@@ -39,6 +39,9 @@
     - key: deployment.environment
       value: {{ .environment }}
       action: insert
+    - key: tail.collector.name
+      value: {{ .service }}
+      action: insert
 {{- end }}
 
 
@@ -136,3 +139,11 @@ otlp/metrics:
 {{- end }}
 {{- end }}
 {{- end }}
+
+{{- define "get-redis-endpoint" }}
+    {{- if eq .Values.redis.config.type "external" -}}
+        {{- print .Values.redis.config.endpoint -}}
+    {{- else -}}
+        {{- printf "%s-%s:%s" .Values.global.name "redis" .Values.redis.specs.port }}
+    {{- end -}}
+{{- end -}}

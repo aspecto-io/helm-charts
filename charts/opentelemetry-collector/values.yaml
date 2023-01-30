@@ -114,7 +114,7 @@ global:
   image:
     repository: 'public.ecr.aws/x3s3n8k7'
     pullPolicy: Always
-    version: 'v0.50.3'
+    version: 'v069.0'
 
 receiver:
   image:
@@ -580,3 +580,41 @@ collector:
         extraConfigPerPort: {}
 #          loadBalancer:
 #            - simple:
+
+redis:
+  enabled: false
+  config:
+    # Can be local or external
+    # local - create a redis deployment as part of this chart
+    # external - connect to an external redis - you must provide an endpoint for this to work
+    type: local
+    endpoint: ''
+    ttlMinutes: 5
+    credentials:
+      # In case we want to bring the credentials from some secret
+      secret:
+        name: ''
+        username_key: ''
+        password_key: ''
+      # In case we want to user hardcoded user/pass
+      username: ''
+      password: ''
+
+  ##### Only relevant when using type: local
+  metadata:
+    labels: {}
+    annotations: {}
+  specs:
+    replicas: 1
+    image:
+      policy: Always
+      name: 'redis'
+      version: '6.0.8'
+    port: '6379'
+    resources:
+      limits:
+        cpu: '1'
+        memory: 2Gi
+      requests:
+        cpu: '0.5'
+        memory: 2Gi
