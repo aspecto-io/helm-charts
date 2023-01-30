@@ -23,6 +23,7 @@ ___
     - [Global](#global)
     - [receiver](#receiver)
     - [collector](#collector)
+    - [redis](#redis)
   - [Resource Planning](#resources-planning)
 
 ___
