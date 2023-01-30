@@ -39,6 +39,9 @@
     - key: deployment.environment
       value: {{ .environment }}
       action: insert
+    - key: tail.collector.name
+      value: {{ .service }}
+      action: insert
 {{- end }}
 
 
