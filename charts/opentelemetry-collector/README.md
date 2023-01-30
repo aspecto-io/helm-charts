@@ -269,9 +269,9 @@ _redis is used for taking linked traces sampling decisions across multiple colle
 | redis.config.`endpoint` | redis endpoint - only relevant in case of using `external` type | string | '' | false |
 | redis.config.`ttlMinutes` | redis item ttl in minutes - it means that the linked trace sampling decision need to take place before this ttl | number | 5 | false |
 | ***`redis.config.credentials`*** | _Configure redis username and password_ |
-| ***`redis.config.credentials.secret`*** | _In case we want to use known secrets_ |
 | redis.config.credentials.`username` | redis username | string | '' | false |
 | redis.config.credentials.`password` | redis password | string | '' | false |
+| ***`redis.config.credentials.secret`*** | _In case we want to use known secrets_ |
 | redis.config.credentials.secret.`name` | secret name  | string | '' | false |
 | redis.config.credentials.secret.`username_key` | secret username key  | string | '' | false |
 | redis.config.credentials.secret.`password_key` | secret name  | string | '' | false |
@@ -286,10 +286,10 @@ _redis is used for taking linked traces sampling decisions across multiple colle
 | redis.spec.image.`name` | Image name | redis | false |
 | redis.spec.image.`version` | Image version | 6.0.8 | false |
 | ***`redis.spec.resources`*** | _resources configuration_ |
-| redis.spec.resources.limits.`cpu` | Amount of cores to allocate to the pod (hard limit) | number | 1 | `true` |
-| redis.spec.resources.limits.`memory` | Amount of memory to allocate to the pod (hard limit) | string | 2Gi | `true` |
-| redis.spec.resources.requests.`cpu` | Amount of cores to allocate to the pod (soft limit) | number | 0.5 | `true` |
-| redis.spec.resources.requests.`memory` | Amount of cores to allocate to the pod (soft limit) | string | 2Gi | `true` |
+| redis.spec.resources.limits.`cpu` | Amount of cores to allocate to the pod (hard limit) | number | 1 | false |
+| redis.spec.resources.limits.`memory` | Amount of memory to allocate to the pod (hard limit) | string | 2Gi | false |
+| redis.spec.resources.requests.`cpu` | Amount of cores to allocate to the pod (soft limit) | number | 0.5 | false |
+| redis.spec.resources.requests.`memory` | Amount of cores to allocate to the pod (soft limit) | string | 2Gi | false |
 
 ___
 # Resources planning
