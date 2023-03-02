@@ -14,5 +14,5 @@ please run:
     `kubectl get service {{ $root.Values.global.name }}-{{ $root.Values.receiver.metadata.name }}-{{ .name }}-service -o jsonpath='{.status.loadBalancer.ingress.hostname}'`
     {{- end }}
 {{- else if eq .Values.receiver.specs.service.serviceType "ClusterIP"}}
-    {{ .Values.global.name }}-{{ .Values.receiver.specs.service.name }}-service.{{ .Release.Namespace }}.svc
+    http://{{ .Values.global.name }}-{{ .Values.receiver.metadata.name }}-{{ .Values.receiver.specs.service.name }}-service.{{ .Release.Namespace }}.svc
 {{- end }}
