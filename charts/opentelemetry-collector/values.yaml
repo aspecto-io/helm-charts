@@ -136,6 +136,7 @@ receiver:
         component: otel-receiver-pod
     deployment:
       annotations: {}
+      customConfig: {}
       labels: {}
     service:
       annotations: {}
@@ -371,6 +372,7 @@ collector:
         component: otel-collector
     deployment:
       annotations: {}
+      customConfig: {}
       labels: {}
     service:
       annotations: {}

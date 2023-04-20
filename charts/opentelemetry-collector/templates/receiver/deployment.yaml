@@ -56,17 +56,8 @@ spec:
       {{- if .Values.receiver.serviceAccount.enabled }}
       {{ toYaml .Values.receiver.serviceAccount.containerConfig | nindent 6 }}
       {{- end }}
-      {{- with .Values.receiver.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.receiver.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.receiver.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
+      {{- with .Values.receiver.deployment.customConfig }}
+      {{ toYaml .Values.receiver.deployment.customConfig | nindent 6 }}
       {{- end }}
       containers:
         - name: "{{ .Values.global.name }}-{{ .Values.receiver.metadata.name }}"

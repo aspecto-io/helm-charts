@@ -56,17 +56,8 @@ spec:
       {{- if .Values.collector.serviceAccount.enabled }}
       {{ toYaml .Values.collector.serviceAccount.containerConfig | nindent 6}}
       {{- end }}
-      {{- with .Values.collector.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.collector.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.collector.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
+      {{- with .Values.collector.deployment.customConfig }}
+      {{ toYaml .Values.receiver.deployment.customConfig | nindent 6 }}
       {{- end }}
       containers:
         - name: "{{ .Values.global.name }}-{{ .Values.collector.metadata.name }}"
