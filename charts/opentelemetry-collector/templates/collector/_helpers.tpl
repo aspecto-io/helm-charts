@@ -62,8 +62,10 @@ telemetry:
 filter:
   metrics:
     include:
-      match_type: strict
+      match_type: regexp
       metric_names:
+        - .*receiver.*
+        - .*exporter.*
         - otelcol_processor_tail_sampling_policy_evaluation_decision
         - otelcol_processor_tail_sampling_count_spans_sampled
 {{- end }}
