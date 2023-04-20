@@ -56,8 +56,8 @@ spec:
       {{- if .Values.receiver.serviceAccount.enabled }}
       {{ toYaml .Values.receiver.serviceAccount.containerConfig | nindent 6 }}
       {{- end }}
-      {{- with .Values.receiver.deployment.customConfig }}
-      {{ toYaml .Values.receiver.deployment.customConfig | nindent 6 }}
+      {{- if .Values.receiver.metadata.deployment.customConfig }}
+      {{ toYaml .Values.receiver.metadata.deployment.customConfig | nindent 6 }}
       {{- end }}
       containers:
         - name: "{{ .Values.global.name }}-{{ .Values.receiver.metadata.name }}"
