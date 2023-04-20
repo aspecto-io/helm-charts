@@ -39,5 +39,5 @@ jobs:
           helm plugin install https://github.com/quintush/helm-unittest
           for chart in $(ct list-changed)
           do
-            helm unittest --helm3 $chart
+            helm unittest $chart
           done
