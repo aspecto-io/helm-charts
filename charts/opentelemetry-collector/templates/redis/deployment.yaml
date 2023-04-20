@@ -9,7 +9,8 @@
 {{- $localData := .Values.redis -}}
 {{- $localDataSpec := .Values.redis.specs -}}
 {{- $localMetadata := .Values.redis.metadata -}}
-
+{{- $resources := $localDataSpec.resources -}}
+{{- if .Values.global.ignoreCpuLimits }}{{ $_ := unset $resources.limits "cpu" }}{{- end }}
 {{- if and ($localData.enabled) (eq $localData.config.type "local") }}
 apiVersion: apps/v1
 kind: Deployment
@@ -37,5 +38,5 @@ spec:
           ports:
               - containerPort: {{ $localDataSpec.port }}
           resources:
-{{ toYaml $localDataSpec.resources | trim | indent 12 }}
+{{ toYaml $resources | trim | indent 12 }}
 {{- end }}

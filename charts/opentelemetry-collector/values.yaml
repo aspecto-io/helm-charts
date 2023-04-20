@@ -10,6 +10,8 @@ global:
         createNewSecret: false
         keyName: 'api-token'
       value:
+  ignoreCpuLimits: false
+  hpaApiVersion: autoscaling/v2beta2
   rolloutStrategy:
     rollingUpdate:
       maxUnavailable: 0
@@ -134,6 +136,7 @@ receiver:
         component: otel-receiver-pod
     deployment:
       annotations: {}
+      customConfig: {}
       labels: {}
     service:
       annotations: {}
@@ -369,6 +372,7 @@ collector:
         component: otel-collector
     deployment:
       annotations: {}
+      customConfig: {}
       labels: {}
     service:
       annotations: {}

@@ -33,7 +33,6 @@ data:
     config_sources:
       aspecto:
         token: ${token}
-        interval: {{ .Values.global.aspecto.interval | default 10 }}
       {{- if .Values.redis.enabled }}
         redis:
           address: {{ include "get-redis-endpoint" . }}
@@ -48,7 +47,7 @@ data:
           {{- include "collector.reciver.protocol.otlp" (dict "service" "http" "protocols" .Values.global.collector_services "localListenerIp" .Values.receiver.specs.network.localListenerIp ) | nindent 10 }}
           {{- include "collector.reciver.protocol.metrics" (dict "service" "metrics" "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp) | indent 4}}
     processors:
-      tail_sampling: $aspecto:tail_sampling
+      tail_sampling: $aspecto:processor:tail_sampling
       resource:
         {{- include "collector.configMap.processors.resource" (dict "environment" .Values.global.aspecto.environment) | indent 6 }}
       batch:
