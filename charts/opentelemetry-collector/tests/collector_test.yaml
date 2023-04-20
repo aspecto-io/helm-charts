@@ -76,3 +76,33 @@ tests:
     asserts:
       - isKind:
           of: Gateway
+  - it: ignore-cpu-limits-test
+    template: collector/deployment.yaml
+    values:
+      - ../values.yaml
+      - tests_values.yaml
+    set:
+      global.ignoreCpuLimits: true
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+  - it: hpa-api-version
+    template: collector/hpa.yaml
+    values:
+      - ../values.yaml
+      - tests_values.yaml
+    asserts:
+      - equal:
+          path: apiVersion
+          value: autoscaling/v2beta2
+  - it: hpa-api-version-override
+    template: collector/hpa.yaml
+    values:
+      - ../values.yaml
+      - tests_values.yaml
+    set:
+      global.hpaApiVersion: autoscaling/v2
+    asserts:
+      - equal:
+          path: apiVersion
+          value: autoscaling/v2

@@ -9,7 +9,7 @@
 {{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- $localObjectLabels := $localMetadata.hpa.labels -}}
 {{- if .Values.receiver.specs.autoscaling.enable }}
-apiVersion: autoscaling/v2beta2
+apiVersion: {{ .Values.global.hpaApiVersion }}
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ .Values.global.name }}-{{ $localMetadata.name }}-hpa

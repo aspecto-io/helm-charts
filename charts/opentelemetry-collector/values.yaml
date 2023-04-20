@@ -10,6 +10,8 @@ global:
         createNewSecret: false
         keyName: 'api-token'
       value:
+  ignoreCpuLimits: false
+  hpaApiVersion: autoscaling/v2beta2
   rolloutStrategy:
     rollingUpdate:
       maxUnavailable: 0

@@ -10,7 +10,7 @@
 {{- $localObjectLabels := $localMetadata.hpa.labels -}}
 {{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
 {{- if .Values.collector.specs.autoscaling.enable }}
-apiVersion: autoscaling/v2beta2
+apiVersion: {{ .Values.global.hpaApiVersion }}
 kind: HorizontalPodAutoscaler
 metadata:
   name: {{ .Values.global.name }}-{{ $localMetadata.name }}-hpa
