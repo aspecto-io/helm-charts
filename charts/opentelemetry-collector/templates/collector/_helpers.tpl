@@ -51,6 +51,8 @@ telemetry:
     address: {{ $localListenerIp }}:{{ .internalPort }}
 {{- end }}
 {{- end }}
+  resource:
+    service.instance.id: $aspecto:settings:instance_id
 {{- end }}
 
 
