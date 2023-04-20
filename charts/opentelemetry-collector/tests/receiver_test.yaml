@@ -88,3 +88,13 @@ tests:
     asserts:
       - isKind:
           of: Gateway
+  - it: ignore-cpu-limits-test
+    template: receiver/deployment.yaml
+    values:
+      - ../values.yaml
+      - tests_values.yaml
+    set:
+      global.ignoreCpuLimits: true
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].resources.limits.cpu

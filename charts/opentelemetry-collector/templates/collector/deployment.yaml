@@ -14,7 +14,8 @@
 {{- $globalSubAnnotations := $globalMetadata.pod.annotations }}
 {{- $localSubAnnotations := $localMetadata.pod.annotations -}}
 {{- $localSubLabels := $localMetadata.pod.labels -}}
-
+{{- $resources := .Values.collector.specs.resources -}}
+{{- if .Values.global.ignoreCpuLimits }}{{ $_ := unset $resources.limits "cpu" }}{{- end }}
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -54,6 +55,9 @@ spec:
             name: {{ .Values.global.name }}-{{ $localMetadata.name }}-{{ .Values.collector.specs.volumes.serviceConfig.name }}
       {{- if .Values.collector.serviceAccount.enabled }}
       {{ toYaml .Values.collector.serviceAccount.containerConfig | nindent 6}}
+      {{- end }}
+      {{- if .Values.collector.metadata.deployment.customConfig }}
+      {{ toYaml .Values.collector.metadata.deployment.customConfig | nindent 6 }}
       {{- end }}
       containers:
         - name: "{{ .Values.global.name }}-{{ .Values.collector.metadata.name }}"
@@ -117,4 +121,4 @@ spec:
 {{ toYaml .Values.collector.specs.probe | trim | indent 10}}
           {{- end }}
           resources:
-{{ toYaml .Values.collector.specs.resources | trim | indent 12 }}
+{{ toYaml $resources | trim | indent 12 }}

@@ -306,6 +306,18 @@
               "default": null
             }
           }
+        },
+        "ignoreCpuLimit": {
+          "type": "boolean",
+          "description": "List of collector services"
+        },
+        "hpaApiVersion": {
+          "description": "hpa api version (changes between kube versions)",
+          "default": "autoscaling/v2beta2",
+          "enum": [
+            "autoscaling/v2",
+            "autoscaling/v2beta2"
+          ]
         }
       }
     },
