@@ -95,22 +95,22 @@ otlp/metrics:
 {{- define "collector.configMap.exporters.kafka" -}}
 kafka:
   brokers:
-  {{- range .Values.collector.specs.configuration.kafka.brokers }}
+  {{- range .kafka.brokers }}
     - {{ . }}
   {{- end }}
-  encoding: {{ .Values.collector.specs.configuration.kafka.encoding }}
+  encoding: {{ .kafka.encoding }}
   auth:
     sasl:
       username: ${KAFKA_USERNAME}
       password: ${KAFKA_PASSWORD}
-      mechanism: {{ .Values.collector.specs.configuration.kafka.auth.mechanism }}
+      mechanism: {{ .kafka.auth.mechanism }}
     tls:
       insecure: false
   producer:
-    compression: {{ .Values.collector.specs.configuration.kafka.producer.compression }}
-    max_message_bytes: {{ .Values.collector.specs.configuration.kafka.producer.max_message_bytes }}
-    flush_max_messages: {{ .Values.collector.specs.configuration.kafka.producer.flush_max_messages }}
-  protocol_version: {{ .Values.collector.specs.configuration.kafka.protocol_version }}
+    compression: {{ .kafka.producer.compression }}
+    max_message_bytes: {{ .kafka.producer.max_message_bytes }}
+    flush_max_messages: {{ .kafka.producer.flush_max_messages }}
+  protocol_version: {{ .kafka.protocol_version }}
 {{- end }}
 
 {{- define "collector.configMap.extentions" -}}{{ $service := .service }}{{ $localListenerIp := .localListenerIp }}
