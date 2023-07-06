@@ -88,6 +88,12 @@ spec:
             - name: token
               value: {{ .Values.global.aspecto.token.value }}
   {{- end }}
+          {{- if .Values.collector.specs.configuration.kafka.enable }}
+            - name: KAFKA_USERNAME
+              value: {{ .Values.collector.specs.configuration.kafka.auth.username }}
+            - name: KAFKA_PASSWORD
+              value: {{ .Values.collector.specs.configuration.kafka.auth.password }}
+          {{- end }}
           {{- if .Values.redis.enabled }}
             {{- if .Values.redis.config.credentials.secret.name }}
             - name: REDIS_USERNAME
