@@ -449,6 +449,26 @@ collector:
       log:
         enable: true
         level: debug
+      kafka:
+        enable: false
+        brokers:
+          - kafka:9093
+        encoding: otlp_proto
+        auth:
+          # In case we want to bring the credentials from some secret
+          secret:
+            name: ''
+            username_key: ''
+            password_key: ''
+          # In case we want to use hardcoded/vault user/pass
+          username: ''
+          password: ''
+          mechanism: 'PLAIN'
+        producer:
+          compression: 'none'
+          max_message_bytes: '1000000'
+          flush_max_messages: '0'
+        protocol_version: '2.5.1'
 
     autoscaling:
       enable: true

@@ -1,0 +1,74 @@
+suite: test kafka exporter configuration
+templates:
+  - collector/deployment.yaml
+  - collector/configMap.yaml
+
+tests:
+  - it: kafka-enabled-collector-env
+    template: collector/deployment.yaml
+    values:
+      - ../values.yaml
+      - tests_values.yaml
+    set:
+      collector.specs.configuration.kafka.enable: true
+      collector.specs.configuration.kafka.auth.username: TestUser
+      collector.specs.configuration.kafka.auth.password: TestPass
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: KAFKA_USERNAME
+            value: TestUser
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: KAFKA_PASSWORD
+            value: TestPass
+
+  - it: kafka-disabled-collector-env
+    template: collector/deployment.yaml
+    values:
+      - ../values.yaml
+      - tests_values.yaml
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: KAFKA_USERNAME
+            value: TestUser
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: KAFKA_PASSWORD
+            value: TestPass
+
+  - it: kafka-exporter-configmap-no-change
+    template: collector/configMap.yaml
+    values:
+      - ../values.yaml
+      - tests_values.yaml
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - notMatchRegex:
+          path: data.collector-config\.yml
+          pattern: "kafka:9093"
+      - notMatchRegex:
+          path: data.collector-config\.yml
+          pattern: "kafka:"
+
+  - it: kafka-exporter-configmap-change
+    template: collector/configMap.yaml
+    values:
+      - ../values.yaml
+      - tests_values.yaml
+    set:
+      collector.specs.configuration.kafka.enable: true
+      collector.specs.configuration.kafka.brokers:
+        - 'mytest:9093'
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - matchRegex:
+          path: data.collector-config\.yml
+          pattern: "mytest:9093"
