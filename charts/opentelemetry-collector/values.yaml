@@ -455,6 +455,12 @@ collector:
           - kafka:9093
         encoding: otlp_proto
         auth:
+          # In case we want to bring the credentials from some secret
+          secret:
+            name: ''
+            username_key: ''
+            password_key: ''
+          # In case we want to use hardcoded/vault user/pass
           username: ''
           password: ''
           mechanism: 'PLAIN'
