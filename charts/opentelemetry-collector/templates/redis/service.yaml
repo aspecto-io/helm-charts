@@ -22,7 +22,7 @@ metadata:
   {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
 spec:
   selector:
-    {{- toYaml $localDataSpec.service.selector | nindent 4}}
+    {{- toYaml $localDataSpec.service.selector | nindent 4 }}
   ports:
     - protocol: TCP
       port: {{ $localDataSpec.port }}
