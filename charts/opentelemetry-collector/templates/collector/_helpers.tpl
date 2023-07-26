@@ -92,6 +92,27 @@ otlp/metrics:
 {{- end }}
 {{- end }}
 
+{{- define "collector.configMap.exporters.kafka" -}}
+kafka:
+  brokers:
+  {{- range .kafka.brokers }}
+    - {{ . }}
+  {{- end }}
+  encoding: {{ .kafka.encoding }}
+  auth:
+    sasl:
+      username: ${KAFKA_USERNAME}
+      password: ${KAFKA_PASSWORD}
+      mechanism: {{ .kafka.auth.mechanism }}
+    tls:
+      insecure: false
+  producer:
+    compression: {{ .kafka.producer.compression }}
+    max_message_bytes: {{ .kafka.producer.max_message_bytes }}
+    flush_max_messages: {{ .kafka.producer.flush_max_messages }}
+  protocol_version: {{ .kafka.protocol_version }}
+{{- end }}
+
 {{- define "collector.configMap.extentions" -}}{{ $service := .service }}{{ $localListenerIp := .localListenerIp }}
 {{- range .protocols }}
     {{- if and (eq .name $service) (.enabled )}}
@@ -111,7 +132,11 @@ otlp/metrics:
 {{ printf "" }}
     receivers: [otlp]
     processors: [tail_sampling, resource, batch]
-    {{- if .logs }}
+    {{- if and (.logs) (.kafka) }}
+    exporters: [otlp/traces, kafka, logging]
+    {{- else if .kafka }}
+    exporters: [otlp/traces, kafka]
+    {{- else if .logs }}
     exporters: [otlp/traces, logging]
     {{ else }}
     exporters: [otlp/traces]

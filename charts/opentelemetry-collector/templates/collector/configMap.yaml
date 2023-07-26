@@ -12,6 +12,7 @@
 {{- $localListenerIp := .Values.collector.specs.network.localListenerIp -}}
 
 {{- $logs := .Values.collector.specs.configuration.log.enable }}
+{{- $kafka := .Values.collector.specs.configuration.kafka.enable }}
 
 apiVersion: v1
 kind: ConfigMap
@@ -59,7 +60,10 @@ data:
       {{- include "collector.configMap.exporters.sendingQueue" (dict "sending_queue" .Values.collector.specs.configuration.sending_queue "queue_size" .Values.collector.specs.configuration.queue_size "num_consumers" .Values.collector.specs.configuration.num_consumers) | indent 6 }}
       {{- include "collector.configMap.exporters.logs" (dict "enable" .Values.collector.specs.configuration.log.enable "logLevel" .Values.collector.specs.configuration.log.level ) | indent 4 }}
       {{- include "collector.configMap.exporters.metrics" (dict "protocols" .Values.global.collector_services "service" "metrics" "endpoint" .Values.collector.specs.configuration.metrics_endpoint) | indent 6 }}
-
+    {{- if $kafka }}
+      {{- include "collector.configMap.exporters.kafka" (dict "kafka" .Values.collector.specs.configuration.kafka) | nindent 6 }}
+      {{- include "collector.configMap.exporters.sendingQueue" (dict "sending_queue" .Values.collector.specs.configuration.sending_queue "queue_size" .Values.collector.specs.configuration.queue_size "num_consumers" .Values.collector.specs.configuration.num_consumers) | indent 6 }}
+    {{- end }}
     extensions:
     {{- include "collector.configMap.extentions" (dict "service" "health_check" "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp ) | indent 4 }}
     {{- include "collector.configMap.extentions" (dict "service" "zpages" "protocols" .Values.global.collector_services "localListenerIp" .Values.collector.specs.network.localListenerIp ) | indent 4 }}
@@ -71,6 +75,6 @@ data:
       {{- include "collector.services" (dict "protocols" .Values.global.collector_services "service" "zpages") | indent 2 }}
       pipelines:
         traces:
-        {{- include "collector.configMap.services.pipelines.traces" (dict "logs" $logs ) | indent 6 }}
+        {{- include "collector.configMap.services.pipelines.traces" (dict "logs" $logs "kafka" $kafka ) | indent 6 }}
         {{- include "collector.configMap.services.pipelines.metrics" (dict "service" "metrics" "protocols" .Values.global.collector_services ) | indent 6 }}
   {{- end }}
