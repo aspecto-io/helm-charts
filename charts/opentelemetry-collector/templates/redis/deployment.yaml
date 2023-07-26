@@ -1,14 +1,20 @@
 {{- $root := . -}}
 {{- $globalMetadata := .Values.global.metadata -}}
-{{- $globalMetadata := .Values.global.metadata -}}
 {{- $globalSharedLabels := $globalMetadata.shared.labels -}}
 {{- $globalObjectLabels := $globalMetadata.deployment.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.deployment.annotations }}
-{{- $localMetadata := .Values.redis.metadata -}}
 {{- $localData := .Values.redis -}}
-{{- $localDataSpec := .Values.redis.specs -}}
-{{- $localMetadata := .Values.redis.metadata -}}
+{{- $localDataSpec := $localData.specs -}}
+{{- $localMetadata := $localData.metadata -}}
+{{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
+{{- $localObjectAnnotations := $localMetadata.deployment.annotations -}}
+{{- $localSharedLabels := $localMetadata.shared.labels -}}
+{{- $localObjectLabels := $localMetadata.deployment.labels -}}
+{{- $globalSubLabels := $globalMetadata.pod.labels }}
+{{- $globalSubAnnotations := $globalMetadata.pod.annotations }}
+{{- $localSubAnnotations := $localMetadata.pod.annotations -}}
+{{- $localSubLabels := $localMetadata.pod.labels -}}
 {{- $resources := $localDataSpec.resources -}}
 {{- if .Values.global.ignoreCpuLimits }}{{ $_ := unset $resources.limits "cpu" }}{{- end }}
 {{- if and ($localData.enabled) (eq $localData.config.type "local") }}
@@ -17,20 +23,28 @@ kind: Deployment
 metadata:
   name: {{ $root.Values.global.name }}-redis-deployment
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
-    {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-    {{- if $localMetadata.labels }}{{ tpl (toYaml $localMetadata.labels | nindent 4) . }}{{- end }}
-  annotations: {{- if $globalSharedAnnotations }}{{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}{{- end }}
-    {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-    {{- if $localMetadata.annotations }}{{ tpl (toYaml $localMetadata.annotations | nindent 4) . }}{{- end }}
+  {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
+  {{- if $localObjectLabels }}{{ toYaml $localObjectLabels | nindent 4 }}{{- end }}
+  annotations: {{- if $globalSharedAnnotations }}{{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}{{- end}}
+  {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
+  {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 spec:
   selector:
     matchLabels:
-      app: redis
+{{- toYaml .Values.redis.metadata.pod.labels | nindent 6 }}
   replicas: {{ $localDataSpec.replicas }}
   template:
     metadata:
-      labels:
-        app: redis
+      labels: {{ tpl ( toYaml $globalSharedLabels | nindent 8) $ }}
+    {{- if $globalSubLabels }}{{ tpl ( toYaml $globalSubLabels | nindent 8) . }}{{- end }}
+    {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 8 }}{{- end }}
+    {{- if $localSubLabels }}{{ toYaml $localSubLabels | nindent 8 }}{{- end }}
+      annotations: {{ tpl ( toYaml $globalSharedAnnotations | nindent 8 ) $ }}
+    {{- if $globalSubAnnotations }}{{ tpl ( toYaml $globalSubAnnotations | nindent 8) . }}{{- end }}
+    {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 8 }}{{- end }}
+    {{- if $localSubAnnotations }}{{ toYaml $localSubAnnotations | nindent 8 }}{{- end }}
     spec:
       containers:
         - name: redis
