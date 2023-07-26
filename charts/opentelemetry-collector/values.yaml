@@ -626,8 +626,16 @@ redis:
 
   ##### Only relevant when using type: local
   metadata:
-    labels: {}
-    annotations: {}
+    shared:
+      annotations: {}
+      labels: {}
+    pod:
+      annotations: {}
+      labels:
+        app: redis
+    deployment:
+      annotations: {}
+      labels: {}
   specs:
     replicas: 1
     image:
@@ -642,3 +650,6 @@ redis:
       requests:
         cpu: '0.5'
         memory: 2Gi
+    service:
+      selector:
+        app: redis

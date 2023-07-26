@@ -4,11 +4,11 @@
 {{- $globalObjectLabels := $globalMetadata.service.labels }}
 {{- $globalSharedAnnotations := $globalMetadata.shared.annotations }}
 {{- $globalObjectAnnotations := $globalMetadata.service.annotations }}
-{{- $localMetadata := .Values.redis.metadata -}}
 {{- $localData := .Values.redis -}}
-{{- $localDataSpec := .Values.redis.specs -}}
-{{- $localMetadata := .Values.redis.metadata -}}
-
+{{- $localDataSpec := $localData.specs -}}
+{{- $localMetadata := $localData.metadata -}}
+{{- $localSharedAnnotations := $localMetadata.shared.annotations -}}
+{{- $localSharedLabels := $localMetadata.shared.labels -}}
 {{- if and ($localData.enabled) (eq $localData.config.type "local") }}
 apiVersion: v1
 kind: Service
@@ -16,14 +16,13 @@ metadata:
   name: {{ $root.Values.global.name }}-redis
   labels: {{ tpl ( toYaml $globalSharedLabels | nindent 4) $ }}
   {{- if $globalObjectLabels }}{{ tpl ( toYaml $globalObjectLabels | nindent 4) . }}{{- end }}
-  {{- if $localMetadata.labels }}{{ tpl (toYaml $localMetadata.labels | nindent 4) . }}{{- end }}
+  {{- if $localSharedLabels }}{{ toYaml $localSharedLabels | nindent 4 }}{{- end }}
   annotations: {{- if $globalSharedAnnotations }}{{ tpl ( toYaml $globalSharedAnnotations | nindent 4) $ }}{{- end }}
   {{- if $globalObjectAnnotations }}{{ tpl ( toYaml $globalObjectAnnotations | nindent 4) . }}{{- end }}
-  {{- if $localMetadata.annotations }}{{ tpl (toYaml $localMetadata.annotations | nindent 4) . }}{{- end }}
-
+  {{- if $localSharedAnnotations }}{{ toYaml $localSharedAnnotations | nindent 4 }}{{- end }}
 spec:
   selector:
-    app: redis
+    {{- toYaml $localDataSpec.service.selector | nindent 4 }}
   ports:
     - protocol: TCP
       port: {{ $localDataSpec.port }}
