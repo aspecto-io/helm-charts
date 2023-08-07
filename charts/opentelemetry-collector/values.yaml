@@ -116,7 +116,7 @@ global:
   image:
     repository: 'public.ecr.aws/x3s3n8k7'
     pullPolicy: Always
-    version: 'v0.69.4'
+    version: 'v0.69.6'
 
 receiver:
   image:
