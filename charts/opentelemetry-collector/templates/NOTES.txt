@@ -11,7 +11,7 @@ The endpoint for you to set in the sdk configuration is:
 {{- if eq .Values.receiver.specs.service.serviceType "LoadBalancer"}}
 please run:
     {{- with .Values.receiver.specs.service }}
-    `kubectl get service {{ $root.Values.global.name }}-{{ $root.Values.receiver.metadata.name }}-{{ .name }}-service -o jsonpath='{.status.loadBalancer.ingress.hostname}'`
+    `kubectl get service {{ $root.Values.global.name }}-{{ $root.Values.receiver.metadata.name }}-{{ .name }}-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'`
     {{- end }}
 {{- else if eq .Values.receiver.specs.service.serviceType "ClusterIP"}}
     http://{{ .Values.global.name }}-{{ .Values.receiver.metadata.name }}-{{ .Values.receiver.specs.service.name }}-service.{{ .Release.Namespace }}.svc
