@@ -124,6 +124,8 @@ spec:
               value: {{ .Values.redis.config.credentials.username | quote }}
             - name: REDIS_PASSWORD
               value: {{ .Values.redis.config.credentials.password | quote }}
+            - name: ASPECTO_CHART_VERSION
+              value: {{ .Chart.Version }}
             {{- end }}
   {{- end }}{{- if .Values.collector.envs }}{{ toYaml .Values.collector.envs | indent 12 }}{{- end}}
           {{- if .Values.collector.envFrom }}

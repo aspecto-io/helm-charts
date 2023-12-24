@@ -116,7 +116,7 @@ global:
   image:
     repository: 'public.ecr.aws/x3s3n8k7'
     pullPolicy: Always
-    version: 'v0.69.7'
+    version: 'v0.91.0'
 
 receiver:
   image:
@@ -214,8 +214,8 @@ receiver:
                 hostname:
                 port: 4317
       log:
-        enable: true
-        level: debug
+        enable: false
+        verbosity: normal
       endpoint: 'aspecto-testing-gateway'
 
     autoscaling:
@@ -448,7 +448,7 @@ collector:
       policies: $$aspecto:tail_sampling_policy
       log:
         enable: true
-        level: debug
+        verbosity: normal
       kafka:
         enable: false
         brokers:

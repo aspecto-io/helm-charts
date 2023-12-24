@@ -39,7 +39,7 @@
 {{- define "receiver.configMap.exporters.logs" -}}
 {{ printf "" }}
   logging:
-    logLevel: {{ .logLevel }}
+    verbosity: {{ .logVerbosity }}
 {{- end }}
 
 {{- define "receiver.configMap.extentions" -}}{{ $service := .service }}{{ $localListenerIp := .localListenerIp }}
