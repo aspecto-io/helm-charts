@@ -24,6 +24,9 @@ metadata:
   {{- if $localObjectAnnotations }}{{ toYaml $localObjectAnnotations | nindent 4 }}{{- end }}
 data:
   {{ .Values.receiver.specs.volumes.serviceConfig.fileName }}: |
+    config_sources:
+      aspecto:
+        token: ${token}
     receivers:
       otlp:
         protocols:

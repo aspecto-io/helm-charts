@@ -58,7 +58,7 @@ data:
       otlp/traces:
         endpoint: {{ .Values.collector.specs.configuration.collector_endpoint }}
       {{- include "collector.configMap.exporters.sendingQueue" (dict "sending_queue" .Values.collector.specs.configuration.sending_queue "queue_size" .Values.collector.specs.configuration.queue_size "num_consumers" .Values.collector.specs.configuration.num_consumers) | indent 6 }}
-      {{- include "collector.configMap.exporters.logs" (dict "enable" .Values.collector.specs.configuration.log.enable "logLevel" .Values.collector.specs.configuration.log.level ) | indent 4 }}
+      {{- include "collector.configMap.exporters.logs" (dict "enable" .Values.collector.specs.configuration.log.enable "verbosity" .Values.collector.specs.configuration.log.verbosity ) | indent 4 }}
       {{- include "collector.configMap.exporters.metrics" (dict "protocols" .Values.global.collector_services "service" "metrics" "endpoint" .Values.collector.specs.configuration.metrics_endpoint) | indent 6 }}
     {{- if $kafka }}
       {{- include "collector.configMap.exporters.kafka" (dict "kafka" .Values.collector.specs.configuration.kafka) | nindent 6 }}
