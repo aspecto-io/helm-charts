@@ -88,7 +88,7 @@ otlp/metrics:
 {{- define "collector.configMap.exporters.logs" -}}
 {{- if .enable }}
   logging:
-    logLevel: {{ .logLevel }}
+    verbosity: {{ .logVerbosity }}
 {{- end }}
 {{- end }}
 
