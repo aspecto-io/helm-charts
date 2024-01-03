@@ -77,19 +77,8 @@ spec:
               mountPath: {{ .mountPath }}
               readOnly: {{ .readOnly }}
           {{- end }}
-
-          env:
-  {{- if or ( $root.Values.global.aspecto.token.secret.createNewSecret) ($root.Values.global.aspecto.token.secret.existingSecretName) }}
-            - name: token
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.global.aspecto.token.secret.existingSecretName | default (printf "%s-token" .Values.global.name) }}
-                  key: {{ .Values.global.aspecto.token.secret.keyName }}
-  {{ else }}
-            - name: token
-              value: {{ .Values.global.aspecto.token.value }}
-  {{- end }}
 {{- if .Values.receiver.envs }}
+          env:
 {{ toYaml .Values.receiver.envs | indent 10 }}
           {{- end}}
           {{- if .Values.receiver.envFrom }}
